@@ -10,9 +10,10 @@ import {
   MoreVertical,
   Image as ImageIcon
 } from 'lucide-react';
-import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+import { CreateCategory, DeleteCategory, GetCategory, UpdateCategory } from '@/app/api/ApiHelper/categoryHelper';
 import { IMAGE_BASE_URL } from '@/app/api/api';
 import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+import Swal from "sweetalert2";
 
 interface Category {
   id: string;
@@ -32,9 +33,11 @@ export default function CategoryManagement() {
   const [categories, setCategories] = useState<any[]>([])
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [page, setPage] = useState(1);
 
-  const limit = 10;
+  const limit = 1000;
 
   // const categories: Category[] = [
   //   {
@@ -128,9 +131,8 @@ export default function CategoryManagement() {
     try {
       // 1️⃣ Upload image
       const uploadRes = await UploadProviderLogo(categoryImage);
-      console.log(uploadRes.data?.data?.url);
-      return
-      const imageUrl = uploadRes.data?.data?.url;
+
+      const imageUrl = uploadRes.data?.filePath;
       // ⚠️ adjust key if backend returns differently
 
       if (!imageUrl) {
@@ -142,7 +144,7 @@ export default function CategoryManagement() {
       await CreateCategory({
         name: categoryName,
         image: imageUrl,
-        isDefault: true,
+        isDefault: 'true',
         categoryType: "category",
       });
 
@@ -163,6 +165,90 @@ export default function CategoryManagement() {
     setOpenMenuId(openMenuId === categoryId ? null : categoryId);
   };
 
+  const handleDeleteCategory = async (categoryId: string) => {
+    const result = await Swal.fire({
+      title: "Delete Category?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await DeleteCategory(categoryId);
+
+      Swal.fire({
+        title: "Deleted!",
+        text: "Category has been deleted successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setOpenMenuId(null);
+      GetUsersData();
+    } catch (error) {
+      console.error("Delete category error:", error);
+
+      Swal.fire({
+        title: "Error",
+        text: "Failed to delete category.",
+        icon: "error",
+      });
+    }
+  };
+
+  const handleEditCategory = (category: any) => {
+    setIsEditMode(true);
+    setSelectedCategory(category);
+    setCategoryName(category.name);
+    setCategoryImage(null); // image optional on edit
+    setShowAddModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!categoryName || !selectedCategory) return;
+
+    try {
+      let imageUrl = selectedCategory.image;
+
+      // Upload only if new image selected
+      if (categoryImage) {
+        const uploadRes = await UploadProviderLogo(categoryImage);
+        imageUrl = uploadRes.data?.filePath;
+
+        if (!imageUrl) {
+          alert("Image upload failed");
+          return;
+        }
+      }
+
+      await UpdateCategory(selectedCategory.id, {
+        name: categoryName,
+        image: imageUrl,
+      });
+
+      resetModal();
+      GetUsersData();
+    } catch (error) {
+      console.error("Update category error:", error);
+    }
+  };
+
+  const resetModal = () => {
+    setCategoryName("");
+    setCategoryImage(null);
+    setSelectedCategory(null);
+    setIsEditMode(false);
+    setShowAddModal(false);
+  };
+
   return (
     <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
@@ -173,7 +259,13 @@ export default function CategoryManagement() {
         </div>
 
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setIsEditMode(false);
+            setSelectedCategory(null);
+            setCategoryName("");
+            setCategoryImage(null);
+            setShowAddModal(true);
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -230,7 +322,7 @@ export default function CategoryManagement() {
                     {/* Menu */}
                     <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                       <button
-                        onClick={() => setOpenMenuId(null)}
+                        onClick={() => handleEditCategory(category)}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                       >
                         <Edit2 className="w-4 h-4 text-gray-600" />
@@ -238,7 +330,7 @@ export default function CategoryManagement() {
                       </button>
 
                       <button
-                        onClick={() => setOpenMenuId(null)}
+                        onClick={() => handleDeleteCategory(category.id)}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -286,7 +378,7 @@ export default function CategoryManagement() {
           <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Add New Category</h2>
+              <h2 className="text-2xl font-bold">{isEditMode ? "Edit Category" : "Add New Category"}</h2>
               <button
                 onClick={() => {
                   setShowAddModal(false);
@@ -302,46 +394,57 @@ export default function CategoryManagement() {
             {/* Form */}
             <div className="space-y-6">
               {/* Image Upload */}
+              {/* Category Image */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Category Image</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FFC93C] transition-colors">
-                  {categoryImage ? (
-                    <div className="relative">
+                <label className="block text-sm font-semibold mb-2">
+                  Category Image
+                </label>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+
+                  {/* IMAGE PREVIEW */}
+                  {(categoryImage || (isEditMode && selectedCategory?.image)) && (
+                    <div className="mb-4">
                       <img
-                        src={categoryImage}
+                        src={
+                          categoryImage
+                            ? URL.createObjectURL(categoryImage) // new image
+                            : selectedCategory.image.startsWith("http")
+                              ? selectedCategory.image              // old image (full url)
+                              : `${IMAGE_BASE_URL}${selectedCategory.image}` // old image (relative)
+                        }
                         alt="Category preview"
                         className="w-32 h-32 object-cover rounded-xl mx-auto"
                       />
-                      <button
-                        onClick={() => setCategoryImage(null)}
-                        className="absolute top-0 right-1/2 translate-x-16 -translate-y-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                  ) : (
-                    <>
-                      <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                      <p className="text-sm text-gray-600 mb-3">
-                        Click to upload or drag and drop
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                      />
-                      <label
-                        htmlFor="image-upload"
-                        className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-semibold transition-colors"
-                      >
-                        Choose File
-                      </label>
-                    </>
                   )}
+
+                  {/* UPLOAD ICON + TEXT */}
+                  <Upload className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 mb-3">
+                    {isEditMode ? "Upload new image to replace" : "Upload category image"}
+                  </p>
+
+                  {/* FILE INPUT */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+
+                  {/* BUTTON */}
+                  <label
+                    htmlFor="image-upload"
+                    className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-semibold"
+                  >
+                    Choose File
+                  </label>
+
                 </div>
               </div>
+
 
               {/* Category Name */}
               <div>
@@ -357,11 +460,11 @@ export default function CategoryManagement() {
 
               {/* Submit Button */}
               <button
-                onClick={handleSubmit}
-                disabled={!categoryName || !categoryImage}
+                onClick={isEditMode ? handleUpdateCategory : handleSubmit}
+                disabled={!categoryName || (!isEditMode && !categoryImage)}
                 className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                Submit
+                {isEditMode ? "Update" : "Submit"}
               </button>
             </div>
           </div>

@@ -1,0 +1,410 @@
+[00:00:22.698] Server  LOG     ✓ Ready in 16.8s
+[00:00:23.407] Server  WARN    ⚠ Cross origin request detected from 192.168.1.105 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[00:00:26.533] Server  LOG     ○ Compiling /admin/category ...
+[00:00:47.273] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:49.311] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:02:05.484] Server  LOG     ✓ Compiled in 505ms
+[00:02:58.896] Server  LOG     ✓ Compiled in 242ms
+[00:03:27.783] Server  LOG     ✓ Compiled in 210ms
+[00:03:45.079] Browser LOG     undefined
+[00:03:52.018] Server  LOG     ✓ Compiled in 952ms
+[00:03:52.160] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:131:40
+Parsing ecmascript source code failed
+  129 |       // 1️⃣ Upload image
+  130 |       const uploadRes = await UploadProviderLogo(categoryImage);
+> 131 |       console.log(uploadRes.data?.data?);
+      |                                        ^
+  132 |       const imageUrl = uploadRes.data?.data?.url;
+  133 |       // ⚠️ adjust key if backend returns differently
+  134 |
+
+Expression expected
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:03:52.686] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:131:40
+Parsing ecmascript source code failed
+  129 |       // 1️⃣ Upload image
+  130 |       const uploadRes = await UploadProviderLogo(categoryImage);
+> 131 |       console.log(uploadRes.data?.data?);
+      |                                        ^
+  132 |       const imageUrl = uploadRes.data?.data?.url;
+  133 |       // ⚠️ adjust key if backend returns differently
+  134 |
+
+Expression expected
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:03:52.800] Server  LOG     ✓ Compiled in 1101ms
+[00:03:58.770] Browser LOG     undefined
+[00:04:08.170] Server  LOG     ✓ Compiled in 293ms
+[00:04:11.535] Browser LOG     {"filePath":"/uploads/l15snj_1769173952184.png","message":"File uploaded"}
+[00:04:20.283] Server  LOG     ✓ Compiled in 236ms
+[00:04:22.422] Server  LOG     ✓ Compiled in 255ms
+[00:04:24.634] Browser LOG     /uploads/l8flsn_1769173966325.png
+[00:04:31.254] Server  LOG     ✓ Compiled in 191ms
+[00:04:34.599] Server  LOG     ✓ Compiled in 305ms
+[00:04:34.699] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:140:11
+Parsing ecmascript source code failed
+  138 |       }
+  139 |
+> 140 |       2️⃣ Create category
+      |           ^
+  141 |       await CreateCategory({
+  142 |         name: categoryName,
+  143 |         image: imageUrl,
+
+Unexpected character '\u{20e3}'
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:04:34.699] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:140:8
+Parsing ecmascript source code failed
+  138 |       }
+  139 |
+> 140 |       2️⃣ Create category
+      |        ^
+  141 |       await CreateCategory({
+  142 |         name: categoryName,
+  143 |         image: imageUrl,
+
+Unexpected character '\u{fe0f}'
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:04:35.680] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:140:11
+Parsing ecmascript source code failed
+  138 |       }
+  139 |
+> 140 |       2️⃣ Create category
+      |           ^
+  141 |       await CreateCategory({
+  142 |         name: categoryName,
+  143 |         image: imageUrl,
+
+Unexpected character '\u{20e3}'
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:04:35.680] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:140:8
+Parsing ecmascript source code failed
+  138 |       }
+  139 |
+> 140 |       2️⃣ Create category
+      |        ^
+  141 |       await CreateCategory({
+  142 |         name: categoryName,
+  143 |         image: imageUrl,
+
+Unexpected character '\u{fe0f}'
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:04:36.466] Server  LOG     ✓ Compiled in 393ms
+[00:04:48.173] Browser ERROR   Create category error: {"code":"ERR_BAD_REQUEST","config":{"adapter":["xhr","http","fetch"],"allowAbsoluteUrls":true,"baseURL":"http://82.112.231.71:5517","data":"{\"name\":\"Test\",\"image\":\"/uploads/od8em2_1769173989805.png\",\"isDefault\":true,\"categoryType\":\"category\"}","env":{},"headers":{"Accept":"application/json, text/plain, */*","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NTc1MzNhNi1iMjgwLTQ5OWItOWI2My04MDM0YzljNzVkMzMiLCJyb2xlIjoiYWRtaW4iLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzY5MTcwODIwLCJleHAiOjE3NjkyNTcyMjB9.jhFoWbe4l7GxVXM_J0khl375CJOIv9Iq0PqxJA_jRYo","Content-Type":"application/json"},"maxBodyLength":-1,"maxContentLength":-1,"method":"post","timeout":0,"transformRequest":[null],"transformResponse":[null],"transitional":{"clarifyTimeoutError":false,"forcedJSONParsing":true,"silentJSONParsing":true},"url":"/admin/categories","xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN"},"message":"Request failed with status code 400","name":"AxiosError","stack":"AxiosError: Request failed with status code 400\n    at settle (http://localhost:3001/_next/static/chunks/b5b3b_6b4d25cb._.js:3842:16)\n    at XMLHttpRequest.onloadend (http://localhost:3001/_next/static/chunks/b5b3b_6b4d25cb._.js:4357:202)\n    at Axios.request (http://localhost:3001/_next/static/chunks/b5b3b_6b4d25cb._.js:5161:49)\n    at async handleSubmit (http://localhost:3001/_next/static/chunks/sahil_Duzaro_webadmin_app_261ac8ec._.js?id=%255Bproject%255D%252Fsahil%252FDuzaro_webadmin%252Fapp%252Fadmin%252Fcategory%252Fpage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:152:13)","status":400}
+[00:05:07.250] Server  LOG     ✓ Compiled in 185ms
+[00:05:10.459] Server  LOG     ✓ Compiled in 795ms
+[00:05:21.719] Server  LOG     ✓ Compiled in 565ms
+[00:05:33.420] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:06:07.590] Server  LOG     ✓ Compiled in 152ms
+[00:06:10.334] Server  LOG     ✓ Compiled in 485ms
+[00:06:11.728] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:06:14.985] Browser LOG     {"code":"ERR_NETWORK","config":{"adapter":["xhr","http","fetch"],"allowAbsoluteUrls":true,"baseURL":"http://82.112.231.71:5517","env":{},"headers":{"Accept":"application/json, text/plain, */*","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NTc1MzNhNi1iMjgwLTQ5OWItOWI2My04MDM0YzljNzVkMzMiLCJyb2xlIjoiYWRtaW4iLCJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNzY5MTcwODIwLCJleHAiOjE3NjkyNTcyMjB9.jhFoWbe4l7GxVXM_J0khl375CJOIv9Iq0PqxJA_jRYo"},"maxBodyLength":-1,"maxContentLength":-1,"method":"get","timeout":0,"transformRequest":[null],"transformResponse":[null],"transitional":{"clarifyTimeoutError":false,"forcedJSONParsing":true,"silentJSONParsing":true},"url":"/admin/categories?page=1&limit=20&search=&categoryType=category","xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN"},"message":"Network Error","name":"AxiosError","stack":"AxiosError: Network Error\n    at XMLHttpRequest.handleError (http://localhost:3001/_next/static/chunks/b5b3b_6b4d25cb._.js:4403:25)\n    at Axios.request (http://localhost:3001/_next/static/chunks/b5b3b_6b4d25cb._.js:5161:49)\n    at async GetUsersData (http://localhost:3001/_next/static/chunks/sahil_Duzaro_webadmin_app_261ac8ec._.js:238:27)"}
+[00:06:24.144] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:07:40.905] Server  LOG     ✓ Compiled in 634ms
+[00:07:41.670] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:49:1
+Ecmascript file had an error
+  47 | };
+  48 |
+> 49 | "use client";
+     | ^^^^^^^^^^^^^
+  50 | import React, { useEffect, useState } from 'react';
+  51 | import {
+  52 |   Search,
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:41.670] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:61:10
+Ecmascript file had an error
+  59 |   Image as ImageIcon
+  60 | } from 'lucide-react';
+> 61 | import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+     |          ^^^^^^^^^^^^^^
+  62 | import { IMAGE_BASE_URL } from '@/app/api/api';
+  63 | import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+  64 |
+
+the name `CreateCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:41.670] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:61:26
+Ecmascript file had an error
+  59 |   Image as ImageIcon
+  60 | } from 'lucide-react';
+> 61 | import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+     |                          ^^^^^^^^^^^
+  62 | import { IMAGE_BASE_URL } from '@/app/api/api';
+  63 | import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+  64 |
+
+the name `GetCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:42.138] Server  LOG     ✓ Compiled in 742ms
+[00:07:42.939] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:49:1
+Ecmascript file had an error
+  47 | };
+  48 |
+> 49 | "use client";
+     | ^^^^^^^^^^^^^
+  50 | import React, { useEffect, useState } from 'react';
+  51 | import {
+  52 |   Search,
+
+The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:42.939] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:61:10
+Ecmascript file had an error
+  59 |   Image as ImageIcon
+  60 | } from 'lucide-react';
+> 61 | import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+     |          ^^^^^^^^^^^^^^
+  62 | import { IMAGE_BASE_URL } from '@/app/api/api';
+  63 | import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+  64 |
+
+the name `CreateCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:42.939] Browser ERROR   ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx:61:26
+Ecmascript file had an error
+  59 |   Image as ImageIcon
+  60 | } from 'lucide-react';
+> 61 | import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+     |                          ^^^^^^^^^^^
+  62 | import { IMAGE_BASE_URL } from '@/app/api/api';
+  63 | import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+  64 |
+
+the name `GetCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/api/ApiHelper/categoryHelper.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:07:48.337] Server  LOG     ✓ Compiled in 201ms
+[00:07:52.071] Server  LOG     ✓ Compiled in 391ms
+[00:08:33.441] Server  LOG     ✓ Compiled in 273ms
+[00:08:37.807] Server  LOG     ✓ Compiled in 331ms
+[00:09:06.536] Server  LOG     ✓ Compiled in 144ms
+[00:09:50.034] Server  LOG     ✓ Compiled in 229ms
+[00:10:23.231] Server  LOG     ✓ Compiled in 1154ms
+[00:10:26.145] Server  LOG     ✓ Compiled in 305ms
+[00:10:33.102] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:11:55.546] Server  LOG     ✓ Compiled in 716ms
+[00:11:55.654] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:204:9
+Ecmascript file had an error
+  202 |   };
+  203 |
+> 204 |   const handleDeleteCategory = async (categoryId: string) => {
+      |         ^^^^^^^^^^^^^^^^^^^^
+  205 |     const result = await Swal.fire({
+  206 |       title: "Delete Category?",
+  207 |       text: "This action cannot be undone.",
+
+the name `handleDeleteCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:11:56.216] Server  LOG     ✓ Compiled in 266ms
+[00:11:59.458] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:204:9
+Ecmascript file had an error
+  202 |   };
+  203 |
+> 204 |   const handleDeleteCategory = async (categoryId: string) => {
+      |         ^^^^^^^^^^^^^^^^^^^^
+  205 |     const result = await Swal.fire({
+  206 |       title: "Delete Category?",
+  207 |       text: "This action cannot be undone.",
+
+the name `handleDeleteCategory` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:12:07.450] Server  LOG     ✓ Compiled in 325ms
+[00:12:23.120] Server  LOG     ✓ Compiled in 255ms
+[00:12:24.018] Server  LOG     ✓ Compiled in 159ms
+[00:12:44.017] Server  LOG     ✓ Compiled in 338ms
+[00:13:51.204] Server  LOG     ✓ Compiled in 444ms
+[00:13:55.688] Server  LOG     ✓ Compiled in 574ms
+[00:14:04.091] Server  LOG     ✓ Compiled in 177ms
+[00:14:50.504] Server  LOG     ✓ Compiled in 177ms
+[00:15:07.297] Server  LOG     ✓ Compiled in 337ms
+[00:15:15.793] Server  LOG     ✓ Compiled in 273ms
+[00:15:23.340] Server  LOG     ✓ Compiled in 455ms
+[00:15:28.045] Server  LOG     ✓ Compiled in 135ms
+[00:15:30.754] Server  LOG     ✓ Compiled in 227ms
+[00:15:33.413] Server  LOG     ✓ Compiled in 218ms
+[00:16:25.189] Server  LOG     ✓ Compiled in 180ms
+[00:16:34.376] Server  LOG     ✓ Compiled in 151ms
+[00:16:35.858] Server  LOG     ✓ Compiled in 196ms
+[00:16:47.348] Server  LOG     ✓ Compiled in 223ms
+[00:19:16.481] Server  LOG     ✓ Compiled in 894ms
+[00:19:18.516] Server  LOG     ✓ Compiled in 648ms
+[00:19:25.303] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:19:34.190] Server  LOG     ✓ Compiled in 230ms
+[00:22:23.069] Server  LOG     ✓ Compiled in 220ms
+[00:22:26.195] Server  LOG     ✓ Compiled in 456ms
+[00:23:07.851] Server  LOG     ✓ Compiled in 184ms
+[00:24:06.892] Server  LOG     ✓ Compiled in 640ms
+[00:24:11.621] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:25:10.473] Server  LOG     ✓ Compiled in 375ms
+[00:26:17.539] Server  LOG     ✓ Compiled in 535ms
+[00:26:17.801] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:445:23
+Parsing ecmascript source code failed
+  443 |       Choose File
+  444 |     </label>
+> 445 |                     </>
+      |                       ^
+  446 |                   )}
+  447 |
+  448 |                 </div>
+
+Expression expected
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:26:18.601] Browser ERROR   ./sahil/Duzaro_webadmin/app/admin/category/page.tsx:445:23
+Parsing ecmascript source code failed
+  443 |       Choose File
+  444 |     </label>
+> 445 |                     </>
+      |                       ^
+  446 |                   )}
+  447 |
+  448 |                 </div>
+
+Expression expected
+
+Import traces:
+  Client Component Browser:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component Browser]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Client Component SSR]
+    ./sahil/Duzaro_webadmin/app/admin/category/page.tsx [Server Component]
+[00:26:20.556] Server  LOG     ✓ Compiled in 302ms
+[00:27:31.722] Server  LOG     ✓ Compiled in 490ms
+[00:27:33.786] Server  LOG     ✓ Compiled in 291ms
+[00:27:51.748] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:29:45.592] Server  LOG     ✓ Compiled in 225ms
