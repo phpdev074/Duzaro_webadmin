@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { 
+import React, { useEffect, useState } from 'react';
+import {
   Search,
   Plus,
   X,
@@ -9,6 +9,7 @@ import {
   Trash2,
   MoreVertical
 } from 'lucide-react';
+import { CreateSubService, Get_SubServices, GetServices } from '@/app/api/ApiHelper/serviceHelper';
 
 interface Service {
   id: string;
@@ -32,6 +33,11 @@ export default function ServiceManagement() {
   const [selectedService, setSelectedService] = useState('');
   const [subServiceName, setSubServiceName] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  // sub-services states
+  const [subServices, setSubServices] = useState<any[]>([]);
+  const [serviceOptions, setServiceOptions] = useState<any[]>([]);
+  const [isEditSubService, setIsEditSubService] = useState(false);
+  const [selectedSubService, setSelectedSubService] = useState<any>(null);
 
   const services: Service[] = [
     {
@@ -84,58 +90,58 @@ export default function ServiceManagement() {
     },
   ];
 
-  const subServices: SubService[] = [
-    {
-      id: '1',
-      serviceName: 'Doctor',
-      subServiceName: 'General Physician'
-    },
-    {
-      id: '2',
-      serviceName: 'Doctor',
-      subServiceName: 'Cardiologist'
-    },
-    {
-      id: '3',
-      serviceName: 'Doctor',
-      subServiceName: 'Dentist'
-    },
-    {
-      id: '4',
-      serviceName: 'Advocate',
-      subServiceName: 'Criminal Lawyer'
-    },
-    {
-      id: '5',
-      serviceName: 'Advocate',
-      subServiceName: 'Civil Lawyer'
-    },
-    {
-      id: '6',
-      serviceName: 'CA (Chartered Accountant)',
-      subServiceName: 'Tax Consultant'
-    },
-    {
-      id: '7',
-      serviceName: 'CA (Chartered Accountant)',
-      subServiceName: 'Audit Services'
-    },
-    {
-      id: '8',
-      serviceName: 'Plumber',
-      subServiceName: 'Pipe Repair'
-    },
-    {
-      id: '9',
-      serviceName: 'Electrician',
-      subServiceName: 'Wiring Installation'
-    },
-    {
-      id: '10',
-      serviceName: 'Tutor',
-      subServiceName: 'Mathematics Tutor'
-    },
-  ];
+  // const subServices: SubService[] = [
+  //   {
+  //     id: '1',
+  //     serviceName: 'Doctor',
+  //     subServiceName: 'General Physician'
+  //   },
+  //   {
+  //     id: '2',
+  //     serviceName: 'Doctor',
+  //     subServiceName: 'Cardiologist'
+  //   },
+  //   {
+  //     id: '3',
+  //     serviceName: 'Doctor',
+  //     subServiceName: 'Dentist'
+  //   },
+  //   {
+  //     id: '4',
+  //     serviceName: 'Advocate',
+  //     subServiceName: 'Criminal Lawyer'
+  //   },
+  //   {
+  //     id: '5',
+  //     serviceName: 'Advocate',
+  //     subServiceName: 'Civil Lawyer'
+  //   },
+  //   {
+  //     id: '6',
+  //     serviceName: 'CA (Chartered Accountant)',
+  //     subServiceName: 'Tax Consultant'
+  //   },
+  //   {
+  //     id: '7',
+  //     serviceName: 'CA (Chartered Accountant)',
+  //     subServiceName: 'Audit Services'
+  //   },
+  //   {
+  //     id: '8',
+  //     serviceName: 'Plumber',
+  //     subServiceName: 'Pipe Repair'
+  //   },
+  //   {
+  //     id: '9',
+  //     serviceName: 'Electrician',
+  //     subServiceName: 'Wiring Installation'
+  //   },
+  //   {
+  //     id: '10',
+  //     serviceName: 'Tutor',
+  //     subServiceName: 'Mathematics Tutor'
+  //   },
+  // ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -156,16 +162,60 @@ export default function ServiceManagement() {
     setShowAddServiceModal(false);
   };
 
-  const handleSubServiceSubmit = () => {
-    console.log('New Sub-Service:', { service: selectedService, subService: subServiceName });
-    // Reset form
-    setSelectedService('');
-    setSubServiceName('');
-    setShowAddSubServiceModal(false);
+  const handleSubServiceSubmit = async () => {
+    if (!selectedService || !subServiceName) return;
+
+    try {
+      await CreateSubService({
+        name: subServiceName,
+        categoryId: Number(selectedService), // 👈 send service ID
+        isDefault: true,
+      });
+
+      setSelectedService("");
+      setSubServiceName("");
+      setShowAddSubServiceModal(false);
+
+      fetchSubServices(); // refresh list
+    } catch (err) {
+      console.error("Create sub-service error", err);
+    }
   };
 
   const handleMenuClick = (id: string) => {
     setOpenMenuId(openMenuId === id ? null : id);
+  };
+
+  useEffect(() => {
+    if (activeTab === "sub-services") {
+      fetchSubServices();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (showAddSubServiceModal) {
+      fetchServicesForDropdown();
+    }
+  }, [showAddSubServiceModal]);
+
+  const fetchSubServices = async () => {
+    try {
+      const res = await Get_SubServices({});
+
+      setSubServices(res.data?.data || []);
+    } catch (err) {
+      console.error("Fetch sub-services error", err);
+    }
+  };
+
+  const fetchServicesForDropdown = async () => {
+    try {
+      const res = await GetServices({});
+      console.log(res.data)
+      setServiceOptions(res.data?.data || []);
+    } catch (err) {
+      console.error("Fetch services error", err);
+    }
   };
 
   return (
@@ -192,11 +242,10 @@ export default function ServiceManagement() {
       <div className="flex items-center gap-4 mb-6 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('services')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${
-            activeTab === 'services'
-              ? 'text-black'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'services'
+            ? 'text-black'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           Services
           {activeTab === 'services' && (
@@ -205,11 +254,10 @@ export default function ServiceManagement() {
         </button>
         <button
           onClick={() => setActiveTab('sub-services')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${
-            activeTab === 'sub-services'
-              ? 'text-black'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'sub-services'
+            ? 'text-black'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           Sub-Services
           {activeTab === 'sub-services' && (
@@ -255,7 +303,7 @@ export default function ServiceManagement() {
                       className="fixed inset-0 z-10"
                       onClick={() => setOpenMenuId(null)}
                     />
-                    
+
                     {/* Menu */}
                     <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                       <button
@@ -265,7 +313,7 @@ export default function ServiceManagement() {
                         <Edit2 className="w-4 h-4 text-gray-600" />
                         <span className="text-sm font-medium text-gray-700">Edit</span>
                       </button>
-                      
+
                       <button
                         onClick={() => setOpenMenuId(null)}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
@@ -306,8 +354,8 @@ export default function ServiceManagement() {
               {subServices.map((subService, index) => (
                 <tr key={subService.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm">{index + 1}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{subService.serviceName}</td>
-                  <td className="px-6 py-4 text-sm">{subService.subServiceName}</td>
+                  <td className="px-6 py-4 text-sm font-medium">{subService.category.name}</td>
+                  <td className="px-6 py-4 text-sm">{subService.name}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="relative inline-block">
                       <button
@@ -325,7 +373,7 @@ export default function ServiceManagement() {
                             className="fixed inset-0 z-10"
                             onClick={() => setOpenMenuId(null)}
                           />
-                          
+
                           {/* Menu */}
                           <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                             <button
@@ -335,7 +383,7 @@ export default function ServiceManagement() {
                               <Edit2 className="w-4 h-4 text-gray-600" />
                               <span className="text-sm font-medium text-gray-700">Edit</span>
                             </button>
-                            
+
                             <button
                               onClick={() => setOpenMenuId(null)}
                               className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
@@ -470,11 +518,13 @@ export default function ServiceManagement() {
                 <select
                   value={selectedService}
                   onChange={(e) => setSelectedService(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm
+             focus:outline-none focus:ring-2 focus:ring-[#FFC93C]
+             max-h-52 overflow-y-auto"
                 >
                   <option value="">Choose a service</option>
-                  {services.map((service) => (
-                    <option key={service.id} value={service.name}>
+                  {serviceOptions.map((service) => (
+                    <option key={service.id} value={service.id}>
                       {service.name}
                     </option>
                   ))}

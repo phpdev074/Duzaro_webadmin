@@ -1,9 +1,62 @@
 import axios from "axios";
-import { BASE_URL, GET, SERVICES } from "../api";
+import { BASE_URL, CATEGORY, GET, POST, SERVICES, SUB_SERVICES } from "../api";
 
-export const GetServices = ({ page = 1, limit = 100 }: { page?: number; limit?: number }= {}) =>
-    axios({
+export const GetServices = ({
+    page = 1,
+    limit = 100,
+    search = '',
+    categoryType = 'services',
+}: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryType?: string;
+} = {}) => {
+    const token =
+        localStorage.getItem('admin_token')
+
+    return axios({
         baseURL: BASE_URL,
         method: GET,
-        url: `${SERVICES}?page=${page}&limit=${limit}`,
+        url: `${CATEGORY}?page=${page}&limit=${limit}&search=${encodeURIComponent(
+            search
+        )}&categoryType=${categoryType}`,
+        headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+        },
+    });
+};
+
+export const Get_SubServices = ({
+    page = 1,
+    limit = 100,
+    search = '',
+    categoryType = 'category',
+}: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryType?: string;
+} = {}) => {
+    const token =
+        localStorage.getItem('admin_token')
+
+    return axios({
+        baseURL: BASE_URL,
+        method: GET,
+        url: `${SUB_SERVICES}?page=${page}&limit=${limit}&search=${encodeURIComponent(
+            search
+        )}&categoryType=${categoryType}`,
+        headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+        },
+    });
+};
+
+export const CreateSubService = (payload: any) =>
+    axios({
+        baseURL: BASE_URL,
+        method: POST,
+        url: "/sub-category",
+        data: payload,
     });
