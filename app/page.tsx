@@ -35,7 +35,7 @@ export default function AdminLoginDesktop() {
     e.preventDefault();
     console.log('Admin login:', { email, password, rememberMe });
     alert('Logging in as admin...');
-    router.push('/dashboard')
+    router.push('/admin')
   };
 
   return (

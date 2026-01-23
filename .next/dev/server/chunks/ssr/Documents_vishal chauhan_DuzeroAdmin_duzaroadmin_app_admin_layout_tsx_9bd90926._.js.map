@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///Users/apple/Documents/vishal%20chauhan/DuzeroAdmin/duzaroadmin/app/admin/layout.tsx"],"sourcesContent":["// \"use client\";\n// import Sidebar from \"@/app/components/admin/Sidebar\";\n// import TopHeader from \"@/app/components/admin/TopHeader\";\n\n// export default function AdminLayout({\n//   children,\n// }: {\n//   children: React.ReactNode;\n// }) {\n//   return (\n//     <div className=\"min-h-screen flex bg-gradient-to-br from-gray-100 to-green-50\">\n//       <Sidebar />\n//       <div className=\"flex-1 ml-64\">\n//         <TopHeader />\n//         <main className=\"p-8\">{children}</main>\n//       </div>\n//     </div>\n//   );\n// }\n"],"names":[],"mappings":"AAAA,gBAAgB;AAChB,wDAAwD;AACxD,4DAA4D;AAE5D,wCAAwC;AACxC,cAAc;AACd,OAAO;AACP,+BAA+B;AAC/B,OAAO;AACP,aAAa;AACb,sFAAsF;AACtF,oBAAoB;AACpB,uCAAuC;AACvC,wBAAwB;AACxB,kDAAkD;AAClD,eAAe;AACf,aAAa;AACb,OAAO;AACP,IAAI"}}]
+}
