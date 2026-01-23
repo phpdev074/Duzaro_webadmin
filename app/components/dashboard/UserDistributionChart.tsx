@@ -4,9 +4,9 @@ import { ChartData } from '@/app/types';
 
 const UserDistributionChart: React.FC = () => {
   const pieChartData: ChartData[] = [
-    { name: 'Active Users', value: 856, color: '#3B82F6' },
-    { name: 'Premium Users', value: 245, color: '#FFC93C' },
-    { name: 'Free Users', value: 147, color: '#10B981' },
+    { name: 'Active Users', value: 0, color: '#3B82F6' },
+    { name: 'Premium Users', value: 0, color: '#FFC93C' },
+    { name: 'Free Users', value: 0, color: '#10B981' },
   ];
 
   return (

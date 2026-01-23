@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { LoginAdmin } from './api/ApiHelper/loginHelper';
 
 
 export default function AdminLoginDesktop() {
@@ -31,11 +32,41 @@ export default function AdminLoginDesktop() {
     setIsValid(isEmailValid && isPasswordValid);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Admin login:', { email, password, rememberMe });
-    alert('Logging in as admin...');
-    router.push('/admin')
+    try {
+      const payload = {
+        email,
+        password,
+      };
+
+      const response = await LoginAdmin(payload);
+      // assuming backend response shape like:
+      // { status: true, data: { token: "jwt-token-here" } }
+      const token = response?.data?.data?.token;
+
+      if (!token) {
+        alert('Login failed: token not received');
+        return;
+      }
+
+      // store token
+      if (rememberMe) {
+        localStorage.setItem('admin_token', token);
+      } else {
+        localStorage.setItem('admin_token', token);
+      }
+
+      router.push('/admin');
+    } catch (error: any) {
+      console.error('Admin login error:', error);
+      alert(
+        error?.response?.data?.message || 'Invalid email or password'
+      );
+    }
+    // alert('Logging in as admin...');
+    // router.push('/admin')
   };
 
   return (
@@ -45,7 +76,7 @@ export default function AdminLoginDesktop() {
       }}
     >
       {/* Background Pattern - Subtle */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
@@ -61,7 +92,7 @@ export default function AdminLoginDesktop() {
 
       {/* Main Container */}
       <div className="relative w-full h-full grid grid-cols-2 gap-0 items-center z-10 px-16">
-        
+
         {/* Left Side - Branding */}
         <div className="flex flex-col justify-center pr-8">
           {/* Logo */}
@@ -72,7 +103,7 @@ export default function AdminLoginDesktop() {
           <h1 className="text-5xl font-bold text-[#1F232A] mb-5 tracking-tight leading-tight">
             Admin Portal
           </h1>
-          
+
           <p className="text-lg text-gray-600 mb-10 leading-relaxed max-w-lg">
             Secure access to manage DUEZARO platform, monitor users, and oversee operations.
           </p>
@@ -124,7 +155,7 @@ export default function AdminLoginDesktop() {
 
         {/* Right Side - Login Form */}
         <div className="relative bg-white/60 backdrop-blur-sm rounded-3xl px-10 py-10 shadow-2xl border border-white/50 max-w-[520px] ml-auto">
-          
+
           {/* Welcome Section */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-[#1F232A] mb-2">Admin Login</h2>
@@ -150,8 +181,8 @@ export default function AdminLoginDesktop() {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   className="w-full bg-white/80 text-[#1F232A] py-3.5 pl-12 pr-4 rounded-xl border-2 border-gray-300 text-[15px] transition-all focus:outline-none focus:border-[#FFC93C] focus:shadow-[0_0_0_4px_rgba(255,201,60,0.1)] placeholder:text-gray-400"
                   placeholder="admin@duezaro.com"
                   value={email}
@@ -170,7 +201,7 @@ export default function AdminLoginDesktop() {
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                <input 
+                <input
                   type={showPassword ? "text" : "password"}
                   className="w-full bg-white/80 text-[#1F232A] py-3.5 pl-12 pr-12 rounded-xl border-2 border-gray-300 text-[15px] transition-all focus:outline-none focus:border-[#FFC93C] focus:shadow-[0_0_0_4px_rgba(255,201,60,0.1)] placeholder:text-gray-400"
                   placeholder="Enter your password"
@@ -202,11 +233,10 @@ export default function AdminLoginDesktop() {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="sr-only"
                   />
-                  <div className={`w-5 h-5 rounded border-2 transition-all ${
-                    rememberMe 
-                      ? 'bg-[#FFC93C] border-[#FFC93C]' 
-                      : 'bg-white/80 border-gray-300 group-hover:border-[#FFC93C]'
-                  }`}>
+                  <div className={`w-5 h-5 rounded border-2 transition-all ${rememberMe
+                    ? 'bg-[#FFC93C] border-[#FFC93C]'
+                    : 'bg-white/80 border-gray-300 group-hover:border-[#FFC93C]'
+                    }`}>
                     {rememberMe && (
                       <svg className="w-full h-full stroke-[#1F232A]" viewBox="0 0 24 24" fill="none" strokeWidth="3">
                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -221,8 +251,8 @@ export default function AdminLoginDesktop() {
               </a>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full py-3.5 bg-gradient-to-br from-[#FFC93C] to-[#FFD666] text-[#1F232A] rounded-xl font-bold text-base transition-all mb-5 shadow-lg shadow-[#FFC93C]/30 hover:shadow-xl hover:shadow-[#FFC93C]/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               disabled={!isValid}
             >

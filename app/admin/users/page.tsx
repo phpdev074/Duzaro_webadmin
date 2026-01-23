@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   Search,
   Bell,
   MoreVertical,
@@ -13,8 +13,16 @@ import {
   Filter,
   X
 } from 'lucide-react';
+import { GetUserList } from '@/app/api/ApiHelper/userHelper';
+import { IMAGE_BASE_URL } from '@/app/api/api';
 
 interface User {
+  fullName: any;
+  profilePictureUrl: any;
+  countryCode: any;
+  mobileNumber: any;
+  createdAt: string | number | Date;
+  isComplated: any;
   id: string;
   name: string;
   email: string;
@@ -25,114 +33,134 @@ interface User {
 }
 
 export default function UserManagement() {
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'blocked'>('users');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  const [users, setUsers] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+
+  const limit = 10;
   const router = useRouter()
 
-  const users: User[] = [
-    {
-      id: '1',
-      name: 'Aarav Sharma',
-      email: 'aarav.sharma@email.com',
-      phone: '+91 98765 43210',
-      joinDate: 'Jan 15, 2024',
-      status: 'Active',
-      avatar: 'AS'
-    },
-    {
-      id: '2',
-      name: 'Priya Singh',
-      email: 'priya.singh@email.com',
-      phone: '+91 98765 43211',
-      joinDate: 'Jan 18, 2024',
-      status: 'Active',
-      avatar: 'PS'
-    },
-    {
-      id: '3',
-      name: 'Rahul Verma',
-      email: 'rahul.verma@email.com',
-      phone: '+91 98765 43212',
-      joinDate: 'Jan 20, 2024',
-      status: 'Active',
-      avatar: 'RV'
-    },
-    {
-      id: '4',
-      name: 'Sneha Patel',
-      email: 'sneha.patel@email.com',
-      phone: '+91 98765 43213',
-      joinDate: 'Jan 22, 2024',
-      status: 'Active',
-      avatar: 'SP'
-    },
-    {
-      id: '5',
-      name: 'Vikram Kumar',
-      email: 'vikram.kumar@email.com',
-      phone: '+91 98765 43214',
-      joinDate: 'Jan 25, 2024',
-      status: 'Active',
-      avatar: 'VK'
-    },
-    {
-      id: '6',
-      name: 'Ananya Desai',
-      email: 'ananya.desai@email.com',
-      phone: '+91 98765 43215',
-      joinDate: 'Jan 28, 2024',
-      status: 'Active',
-      avatar: 'AD'
-    },
-    {
-      id: '7',
-      name: 'Arjun Malhotra',
-      email: 'arjun.malhotra@email.com',
-      phone: '+91 98765 43216',
-      joinDate: 'Feb 01, 2024',
-      status: 'Active',
-      avatar: 'AM'
-    },
-    {
-      id: '8',
-      name: 'Diya Reddy',
-      email: 'diya.reddy@email.com',
-      phone: '+91 98765 43217',
-      joinDate: 'Feb 03, 2024',
-      status: 'Active',
-      avatar: 'DR'
-    }
-  ];
+  // const users: User[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Aarav Sharma',
+  //     email: 'aarav.sharma@email.com',
+  //     phone: '+91 98765 43210',
+  //     joinDate: 'Jan 15, 2024',
+  //     status: 'Active',
+  //     avatar: 'AS'
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Priya Singh',
+  //     email: 'priya.singh@email.com',
+  //     phone: '+91 98765 43211',
+  //     joinDate: 'Jan 18, 2024',
+  //     status: 'Active',
+  //     avatar: 'PS'
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Rahul Verma',
+  //     email: 'rahul.verma@email.com',
+  //     phone: '+91 98765 43212',
+  //     joinDate: 'Jan 20, 2024',
+  //     status: 'Active',
+  //     avatar: 'RV'
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Sneha Patel',
+  //     email: 'sneha.patel@email.com',
+  //     phone: '+91 98765 43213',
+  //     joinDate: 'Jan 22, 2024',
+  //     status: 'Active',
+  //     avatar: 'SP'
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Vikram Kumar',
+  //     email: 'vikram.kumar@email.com',
+  //     phone: '+91 98765 43214',
+  //     joinDate: 'Jan 25, 2024',
+  //     status: 'Active',
+  //     avatar: 'VK'
+  //   },
+  //   {
+  //     id: '6',
+  //     name: 'Ananya Desai',
+  //     email: 'ananya.desai@email.com',
+  //     phone: '+91 98765 43215',
+  //     joinDate: 'Jan 28, 2024',
+  //     status: 'Active',
+  //     avatar: 'AD'
+  //   },
+  //   {
+  //     id: '7',
+  //     name: 'Arjun Malhotra',
+  //     email: 'arjun.malhotra@email.com',
+  //     phone: '+91 98765 43216',
+  //     joinDate: 'Feb 01, 2024',
+  //     status: 'Active',
+  //     avatar: 'AM'
+  //   },
+  //   {
+  //     id: '8',
+  //     name: 'Diya Reddy',
+  //     email: 'diya.reddy@email.com',
+  //     phone: '+91 98765 43217',
+  //     joinDate: 'Feb 03, 2024',
+  //     status: 'Active',
+  //     avatar: 'DR'
+  //   }
+  // ];
 
   const blockedUsers: User[] = [
-    {
-      id: '101',
-      name: 'Rohan Gupta',
-      email: 'rohan.gupta@email.com',
-      phone: '+91 98765 43220',
-      joinDate: 'Dec 10, 2023',
-      status: 'Blocked',
-      avatar: 'RG'
-    },
-    {
-      id: '102',
-      name: 'Kavya Joshi',
-      email: 'kavya.joshi@email.com',
-      phone: '+91 98765 43221',
-      joinDate: 'Dec 15, 2023',
-      status: 'Blocked',
-      avatar: 'KJ'
-    }
+
   ];
 
   const currentUsers = activeTab === 'users' ? users : blockedUsers;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+      // setBlockedPage(1);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const GetUsersData = async () => {
+    setIsLoading(true);
+    // setUsers([]);
+    try {
+      const respo = await GetUserList({ search: debouncedSearch, page, limit });
+      
+      setUsers(respo.data.data || []);
+      setTotalPages(respo.data.pagination.totalPages || 1);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    GetUsersData();
+  }, [debouncedSearch, page])
 
   const handleMenuClick = (userId: string) => {
     setOpenMenuId(openMenuId === userId ? null : userId);
   };
 
   const handleAction = (action: string, user: User) => {
-    console.log(`${action} for user:`, user.name);
+    console.log(`${action} for user:`, user.fullName);
+    sessionStorage.setItem('selectedUser', JSON.stringify(user));
     router.push("userdetails")
     setOpenMenuId(null);
   };
@@ -162,21 +190,19 @@ export default function UserManagement() {
       <div className="flex items-center gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${
-            activeTab === 'users'
-              ? 'bg-white shadow-sm'
-              : 'text-gray-600 hover:text-black'
-          }`}
+          className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${activeTab === 'users'
+            ? 'bg-white shadow-sm'
+            : 'text-gray-600 hover:text-black'
+            }`}
         >
           Users ({users.length})
         </button>
         <button
           onClick={() => setActiveTab('blocked')}
-          className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${
-            activeTab === 'blocked'
-              ? 'bg-white shadow-sm'
-              : 'text-gray-600 hover:text-black'
-          }`}
+          className={`px-6 py-2 rounded-lg font-semibold text-sm transition-all ${activeTab === 'blocked'
+            ? 'bg-white shadow-sm'
+            : 'text-gray-600 hover:text-black'
+            }`}
         >
           Blocked Users ({blockedUsers.length})
         </button>
@@ -188,6 +214,8 @@ export default function UserManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, email or phone..."
             className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
           />
@@ -222,88 +250,120 @@ export default function UserManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {currentUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">{user.avatar}</span>
+              {currentUsers.map((user) => {
+                const initials =
+                  user?.fullName?.trim()
+                    ? user.fullName
+                      .trim()
+                      .split(/\s+/)
+                      .map((n: string) => n.charAt(0))
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()
+                    : 'NA';
+
+                return (
+                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
+                          {user?.profilePictureUrl ? (
+                            <img
+                              src={
+                                user.profilePictureUrl.startsWith('https')
+                                  ? user.profilePictureUrl
+                                  : `${IMAGE_BASE_URL}${user.profilePictureUrl}`
+                              }
+                              alt={user.fullName}
+                              className="block w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-500 text-white font-semibold text-xs">
+                              {initials}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-sm">{user.fullName}</div>
+                          <div className="text-xs text-gray-500">{user.email}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold text-sm">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700">{user.countryCode} {user.mobileNumber}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700">
+                        {new Date(user.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: '2-digit',
+                          year: 'numeric',
+                        })}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-700">{user.phone}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-700">{user.joinDate}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.status === 'Active'
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${user.isComplated
                           ? 'bg-green-100 text-green-700'
                           : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="relative">
-                      <button
-                        onClick={() => handleMenuClick(user.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                          }`}
                       >
-                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                      </button>
+                        {user.isComplated ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="relative">
+                        <button
+                          onClick={() => handleMenuClick(user.id)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <MoreVertical className="w-5 h-5 text-gray-600" />
+                        </button>
 
-                      {/* Dropdown Menu */}
-                      {openMenuId === user.id && (
-                        <>
-                          {/* Backdrop */}
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setOpenMenuId(null)}
-                          />
-                          
-                          {/* Menu */}
-                          <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                            <button
-                              onClick={() => handleAction('View Detail', user)}
-                              className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                            >
-                              <Eye className="w-4 h-4 text-gray-600" />
-                              <span className="text-sm font-medium text-gray-700">View Detail</span>
-                            </button>
-                            
-                            {activeTab === 'users' && (
+                        {/* Dropdown Menu */}
+                        {openMenuId === user.id && (
+                          <>
+                            {/* Backdrop */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+
+                            {/* Menu */}
+                            <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                               <button
-                                onClick={() => handleAction('Block User', user)}
+                                onClick={() => handleAction('View Detail', user)}
                                 className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                               >
-                                <Ban className="w-4 h-4 text-orange-600" />
-                                <span className="text-sm font-medium text-orange-600">Block User</span>
+                                <Eye className="w-4 h-4 text-gray-600" />
+                                <span className="text-sm font-medium text-gray-700">View Detail</span>
                               </button>
-                            )}
-                            
-                            <button
-                              onClick={() => handleAction('Delete User', user)}
-                              className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                              <span className="text-sm font-medium text-red-600">Delete User</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+
+                              {activeTab === 'users' && (
+                                <button
+                                  onClick={() => handleAction('Block User', user)}
+                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                >
+                                  <Ban className="w-4 h-4 text-orange-600" />
+                                  <span className="text-sm font-medium text-orange-600">Block User</span>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleAction('Delete User', user)}
+                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                                <span className="text-sm font-medium text-red-600">Delete User</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -315,13 +375,35 @@ export default function UserManagement() {
             <span className="font-semibold">{currentUsers.length}</span> users
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
+      ${page === 1
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 hover:bg-gray-50'}
+    `}
+            >
               Previous
             </button>
-            <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
+
+            <span className="text-sm text-gray-600 font-medium">
+              Page {page} of {totalPages}
+            </span>
+
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
+      ${page === totalPages
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-black text-white hover:bg-gray-800'}
+    `}
+            >
               Next
             </button>
           </div>
+
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
   const stats: StatCard[] = [
     {
       title: 'Total Users',
-      value: '1,248',
+      value: '0',
       change: '+12.5%',
       trend: 'up',
       icon: Users,
@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Active Services',
-      value: '856',
+      value: '0',
       change: '+8.2%',
       trend: 'up',
       icon: Briefcase,
@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Revenue',
-      value: '₹12.4L',
+      value: '₹0',
       change: '+15.3%',
       trend: 'up',
       icon: DollarSign,
@@ -54,7 +54,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Pending Dues',
-      value: '₹2.8L',
+      value: '₹0',
       change: '-5.4%',
       trend: 'down',
       icon: Calendar,

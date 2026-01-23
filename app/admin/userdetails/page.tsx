@@ -1,6 +1,6 @@
 "use client"
-import  { useState } from 'react';
-import { 
+import { useEffect, useState } from 'react';
+import {
   ArrowLeft,
   Mail,
   Phone,
@@ -25,31 +25,42 @@ import {
   IdCard,
   Radius
 } from 'lucide-react';
+import { IMAGE_BASE_URL } from '@/app/api/api';
+import { useRouter } from 'next/navigation';
 
 interface UserDetailProps {
   onBack?: () => void;
 }
 
 export default function UserDetail({ onBack }: UserDetailProps) {
-  const [activeMainTab, setActiveMainTab] = useState<'user' | 'vendor'>('user');
+  const [activeMainTab, setActiveMainTab] = useState<'user' | 'vendor'>('vendor');
   const [activeUserTab, setActiveUserTab] = useState<'overview' | 'bookings' | 'reviews'>('overview');
   const [activeVendorTab, setActiveVendorTab] = useState<'basic' | 'presence' | 'services' | 'time' | 'trust' | 'bank' | 'portfolio'>('basic');
-  
+  const [userData, setUserData] = useState<any>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('selectedUser');
+
+    if (storedUser) {
+      setUserData(JSON.parse(storedUser));
+    }
+  }, []);
   // Mock user data
-  const userData = {
-    id: 1,
-    name: 'Aarav Sharma',
-    email: 'aaravsharma@email.com',
-    phone: '+91 98765 43210',
-    initials: 'AS',
-    joinDate: 'Jan 15, 2024',
-    location: 'Mumbai, Maharashtra',
-    status: 'Active',
-    totalBookings: 24,
-    totalSpent: 45600,
-    averageRating: 4.8,
-    totalReviews: 18
-  };
+  // const userData = {
+  //   id: 1,
+  //   name: 'Aarav Sharma',
+  //   email: 'aaravsharma@email.com',
+  //   phone: '+91 98765 43210',
+  //   initials: 'AS',
+  //   joinDate: 'Jan 15, 2024',
+  //   location: 'Mumbai, Maharashtra',
+  //   status: 'Active',
+  //   totalBookings: 24,
+  //   totalSpent: 45600,
+  //   averageRating: 4.8,
+  //   totalReviews: 18
+  // };
 
   // Mock vendor data
   const vendorData = {
@@ -149,13 +160,32 @@ export default function UserDetail({ onBack }: UserDetailProps) {
     }
   ];
 
+  if (!userData) {
+    return (
+      <div className="p-8 text-gray-600">
+        Loading user details...
+      </div>
+    );
+  }
+
+  const initials =
+    userData?.fullName?.trim()
+      ? userData.fullName
+        .trim()
+        .split(/\s+/)
+        .map((n: string) => n.charAt(0))
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+      : 'NA';
+
   return (
     <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={onBack}
+            onClick={() => router.back()}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -167,10 +197,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold">
+          {/* <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-semibold">
             <Edit2 className="w-4 h-4" />
             Edit User
-          </button>
+          </button> */}
           <button className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-semibold">
             <Ban className="w-4 h-4" />
             Block User
@@ -182,27 +212,39 @@ export default function UserDetail({ onBack }: UserDetailProps) {
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-gray-200 mb-6">
         <div className="flex items-start gap-6">
           {/* Profile Picture */}
-          <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-            {userData.initials}
+          <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">{userData?.profilePictureUrl ? (
+              <img
+                src={userData?.profilePictureUrl.startsWith('https') ? userData?.profilePictureUrl : `${IMAGE_BASE_URL}${userData?.profilePictureUrl}`}
+                alt={userData?.fullName}
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full flex items-center justify-center text-white font-medium bg-gray-500 text-4xl">
+                {initials}
+              </div>
+            )}
+            </span>
           </div>
 
           {/* User Info */}
           <div className="flex-1">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold mb-2">{userData.name}</h2>
+                <h2 className="text-2xl font-bold mb-2">{userData.fullName}</h2>
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${
-                    userData.status === 'Active' 
-                      ? 'bg-green-100 text-green-700' 
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${userData?.isComplated
+                      ? 'bg-green-100 text-green-700'
                       : 'bg-red-100 text-red-700'
-                  }`}>
-                    {userData.status === 'Active' ? (
+                      }`}
+                  >
+                    {userData?.isComplated ? (
                       <CheckCircle className="w-4 h-4" />
                     ) : (
                       <Ban className="w-4 h-4" />
                     )}
-                    {userData.status}
+                    {userData?.isComplated ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>
@@ -221,7 +263,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                 <Phone className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Phone Number</p>
-                  <p className="font-medium text-gray-700">{userData.phone}</p>
+                  <p className="font-medium text-gray-700">{userData.countryCode} {userData.mobileNumber}</p>
                 </div>
               </div>
 
@@ -229,7 +271,11 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                 <Calendar className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Join Date</p>
-                  <p className="font-medium text-gray-700">{userData.joinDate}</p>
+                  <p className="font-medium text-gray-700">{new Date(userData.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    year: 'numeric',
+                  })}</p>
                 </div>
               </div>
 
@@ -237,7 +283,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                 <MapPin className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Location</p>
-                  <p className="font-medium text-gray-700">{userData.location}</p>
+                  <p className="font-medium text-gray-700">{userData.address}</p>
                 </div>
               </div>
             </div>
@@ -246,14 +292,14 @@ export default function UserDetail({ onBack }: UserDetailProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-6">
+      {/* <div className="grid grid-cols-4 gap-6 mb-6">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center justify-between mb-3">
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <Briefcase className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">{userData.totalBookings}</p>
+          <p className="text-3xl font-bold mb-1">{userData.totalBookings ?? 0}</p>
           <p className="text-sm text-gray-600">Total Bookings</p>
         </div>
 
@@ -263,7 +309,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               <DollarSign className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">₹{userData.totalSpent.toLocaleString()}</p>
+          <p className="text-3xl font-bold mb-1">₹{(userData.totalSpent ?? 0).toLocaleString()}</p>
           <p className="text-sm text-gray-600">Total Spent</p>
         </div>
 
@@ -273,7 +319,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               <Star className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">{userData.averageRating}</p>
+          <p className="text-3xl font-bold mb-1">{userData.averageRating ?? 'N/A'}</p>
           <p className="text-sm text-gray-600">Average Rating</p>
         </div>
 
@@ -283,32 +329,30 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               <Star className="w-6 h-6 text-purple-600" />
             </div>
           </div>
-          <p className="text-3xl font-bold mb-1">{userData.totalReviews}</p>
+          <p className="text-3xl font-bold mb-1">{userData.totalReviews ?? 0}</p>
           <p className="text-sm text-gray-600">Total Reviews</p>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Tabs - User Info / Vendor Info */}
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200">
         <div className="border-b border-gray-200 px-6">
           <div className="flex gap-6">
-            <button
+            {/* <button
               onClick={() => setActiveMainTab('user')}
-              className={`py-4 px-2 border-b-2 transition-colors font-semibold ${
-                activeMainTab === 'user'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`py-4 px-2 border-b-2 transition-colors font-semibold ${activeMainTab === 'user'
+                ? 'border-black text-black'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               User Info
-            </button>
+            </button> */}
             <button
               onClick={() => setActiveMainTab('vendor')}
-              className={`py-4 px-2 border-b-2 transition-colors font-semibold ${
-                activeMainTab === 'vendor'
-                  ? 'border-black text-black'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+              className={`py-4 px-2 border-b-2 transition-colors font-semibold ${activeMainTab === 'vendor'
+                ? 'border-black text-black'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
             >
               Vendor Info
             </button>
@@ -322,31 +366,28 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               <div className="flex gap-4">
                 <button
                   onClick={() => setActiveUserTab('overview')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${
-                    activeUserTab === 'overview'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${activeUserTab === 'overview'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Overview
                 </button>
                 <button
                   onClick={() => setActiveUserTab('bookings')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${
-                    activeUserTab === 'bookings'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${activeUserTab === 'bookings'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Bookings ({bookings.length})
                 </button>
                 <button
                   onClick={() => setActiveUserTab('reviews')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${
-                    activeUserTab === 'reviews'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold ${activeUserTab === 'reviews'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Reviews ({reviews.length})
                 </button>
@@ -411,13 +452,12 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                           <p className="font-bold text-lg">₹{booking.amount.toLocaleString()}</p>
                         </div>
                         <div className="text-center min-w-[100px]">
-                          <span className={`inline-block px-3 py-1 rounded-lg text-sm font-bold ${
-                            booking.status === 'Completed' 
-                              ? 'bg-green-100 text-green-700'
-                              : booking.status === 'Cancelled'
+                          <span className={`inline-block px-3 py-1 rounded-lg text-sm font-bold ${booking.status === 'Completed'
+                            ? 'bg-green-100 text-green-700'
+                            : booking.status === 'Cancelled'
                               ? 'bg-red-100 text-red-700'
                               : 'bg-yellow-100 text-yellow-700'
-                          }`}>
+                            }`}>
                             {booking.status}
                           </span>
                         </div>
@@ -442,11 +482,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                             {[...Array(5)].map((_, index) => (
                               <Star
                                 key={index}
-                                className={`w-4 h-4 ${
-                                  index < review.rating
-                                    ? 'fill-[#FFC93C] text-[#FFC93C]'
-                                    : 'text-gray-300'
-                                }`}
+                                className={`w-4 h-4 ${index < review.rating
+                                  ? 'fill-[#FFC93C] text-[#FFC93C]'
+                                  : 'text-gray-300'
+                                  }`}
                               />
                             ))}
                           </div>
@@ -469,71 +508,64 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               <div className="flex gap-3 overflow-x-auto">
                 <button
                   onClick={() => setActiveVendorTab('basic')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'basic'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'basic'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Basic
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('presence')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'presence'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'presence'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Presence
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('services')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'services'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'services'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Services
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('time')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'time'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'time'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Time
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('trust')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'trust'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'trust'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Trust
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('bank')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'bank'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'bank'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Bank
                 </button>
                 <button
                   onClick={() => setActiveVendorTab('portfolio')}
-                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${
-                    activeVendorTab === 'portfolio'
-                      ? 'border-[#FFC93C] text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
+                  className={`py-3 px-3 border-b-2 transition-colors text-sm font-semibold whitespace-nowrap ${activeVendorTab === 'portfolio'
+                    ? 'border-[#FFC93C] text-black'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
                 >
                   Portfolio
                 </button>
@@ -566,7 +598,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'presence' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Business Presence</h3>
-                  
+
                   <div className="grid grid-cols-2 gap-6">
                     <div className="bg-gray-50 p-5 rounded-xl">
                       <div className="flex items-center gap-3 mb-3">
@@ -607,7 +639,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'services' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Services Offered</h3>
-                  
+
                   <div className="space-y-4">
                     {vendorData.services.map((service, index) => (
                       <div key={index} className="bg-gray-50 p-5 rounded-xl">
@@ -640,7 +672,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'time' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Working Hours</h3>
-                  
+
                   <div className="space-y-3">
                     {vendorData.schedule.map((schedule, index) => (
                       <div
@@ -651,9 +683,8 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                           <Clock className="w-5 h-5 text-gray-600" />
                           <p className="font-bold">{schedule.day}</p>
                         </div>
-                        <p className={`font-semibold ${
-                          schedule.time === 'Closed' ? 'text-red-600' : 'text-gray-700'
-                        }`}>
+                        <p className={`font-semibold ${schedule.time === 'Closed' ? 'text-red-600' : 'text-gray-700'
+                          }`}>
                           {schedule.time}
                         </p>
                       </div>
@@ -666,7 +697,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'trust' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Trust & Verification</h3>
-                  
+
                   {/* Aadhaar Section */}
                   <div className="bg-gray-50 p-6 rounded-xl">
                     <div className="flex items-center gap-3 mb-4">
@@ -717,7 +748,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'bank' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Bank Details</h3>
-                  
+
                   {/* QR Code */}
                   <div className="bg-gray-50 p-6 rounded-xl max-w-md">
                     <div className="flex items-center gap-3 mb-4">
@@ -756,7 +787,7 @@ export default function UserDetail({ onBack }: UserDetailProps) {
               {activeVendorTab === 'portfolio' && (
                 <div className="space-y-6">
                   <h3 className="font-bold text-lg mb-4">Work Portfolio</h3>
-                  
+
                   <div className="grid grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6].map((item) => (
                       <div key={item} className="bg-gray-50 p-4 rounded-xl border-2 border-dashed border-gray-300">

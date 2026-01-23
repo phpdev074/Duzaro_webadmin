@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { 
+import React, { useEffect, useState } from 'react';
+import {
   Search,
   Plus,
   X,
@@ -10,6 +10,9 @@ import {
   MoreVertical,
   Image as ImageIcon
 } from 'lucide-react';
+import { CreateCategory, GetCategory } from '@/app/api/ApiHelper/categoryHelper';
+import { IMAGE_BASE_URL } from '@/app/api/api';
+import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
 
 interface Category {
   id: string;
@@ -19,79 +22,141 @@ interface Category {
 }
 
 export default function CategoryManagement() {
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [categoryName, setCategoryName] = useState('');
-  const [categoryImage, setCategoryImage] = useState<string | null>(null);
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  const [users, setUsers] = useState([]);
+  const [categories, setCategories] = useState<any[]>([])
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
-  const categories: Category[] = [
-    {
-      id: '1',
-      name: 'Electricity',
-      image: '⚡',
-      servicesCount: 24
-    },
-    {
-      id: '2',
-      name: 'Water',
-      image: '💧',
-      servicesCount: 18
-    },
-    {
-      id: '3',
-      name: 'Gas',
-      image: '🔥',
-      servicesCount: 15
-    },
-    {
-      id: '4',
-      name: 'Insurance',
-      image: '🛡️',
-      servicesCount: 32
-    },
-    {
-      id: '5',
-      name: 'Telecom',
-      image: '📱',
-      servicesCount: 28
-    },
-    {
-      id: '6',
-      name: 'Internet',
-      image: '🌐',
-      servicesCount: 21
-    },
-    {
-      id: '7',
-      name: 'DTH/Cable',
-      image: '📺',
-      servicesCount: 16
-    },
-    {
-      id: '8',
-      name: 'Loan EMI',
-      image: '💰',
-      servicesCount: 42
-    },
-  ];
+  const limit = 10;
+
+  // const categories: Category[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Electricity',
+  //     image: '⚡',
+  //     servicesCount: 24
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Water',
+  //     image: '💧',
+  //     servicesCount: 18
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'Gas',
+  //     image: '🔥',
+  //     servicesCount: 15
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Insurance',
+  //     image: '🛡️',
+  //     servicesCount: 32
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Telecom',
+  //     image: '📱',
+  //     servicesCount: 28
+  //   },
+  //   {
+  //     id: '6',
+  //     name: 'Internet',
+  //     image: '🌐',
+  //     servicesCount: 21
+  //   },
+  //   {
+  //     id: '7',
+  //     name: 'DTH/Cable',
+  //     image: '📺',
+  //     servicesCount: 16
+  //   },
+  //   {
+  //     id: '8',
+  //     name: 'Loan EMI',
+  //     image: '💰',
+  //     servicesCount: 42
+  //   },
+  // ];
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+      // setBlockedPage(1);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const GetUsersData = async () => {
+    setIsLoading(true);
+    // setUsers([]);
+    try {
+      const respo = await GetCategory({ search: debouncedSearch, page, limit });
+
+      setCategories(respo.data.data || []);
+      setTotalPages(respo.data.pagination.totalPages || 1);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    GetUsersData();
+  }, [debouncedSearch, page])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCategoryImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setCategoryImage(file);
     }
   };
 
-  const handleSubmit = () => {
-    console.log('New Category:', { name: categoryName, image: categoryImage });
-    // Reset form
-    setCategoryName('');
-    setCategoryImage(null);
-    setShowAddModal(false);
+  const handleSubmit = async () => {
+    if (!categoryName || !categoryImage) return;
+
+    try {
+      // 1️⃣ Upload image
+      const uploadRes = await UploadProviderLogo(categoryImage);
+      console.log(uploadRes.data?.data?.url);
+      return
+      const imageUrl = uploadRes.data?.data?.url;
+      // ⚠️ adjust key if backend returns differently
+
+      if (!imageUrl) {
+        alert("Image upload failed");
+        return;
+      }
+
+      // 2️⃣ Create category
+      await CreateCategory({
+        name: categoryName,
+        image: imageUrl,
+        isDefault: true,
+        categoryType: "category",
+      });
+
+      // 3️⃣ Reset + close modal
+      setCategoryName("");
+      setCategoryImage(null);
+      setShowAddModal(false);
+
+      // 4️⃣ Refresh list
+      GetUsersData();
+
+    } catch (error) {
+      console.error("Create category error:", error);
+    }
   };
 
   const handleMenuClick = (categoryId: string) => {
@@ -122,6 +187,8 @@ export default function CategoryManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search categories..."
             className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
           />
@@ -130,60 +197,87 @@ export default function CategoryManagement() {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-4 gap-6">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
-          >
-            {/* Three Dot Menu */}
-            <div className="absolute top-4 right-4">
-              <button
-                onClick={() => handleMenuClick(category.id)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <MoreVertical className="w-5 h-5 text-gray-600" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {openMenuId === category.id && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setOpenMenuId(null)}
-                  />
-                  
-                  {/* Menu */}
-                  <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                    <button
-                      onClick={() => setOpenMenuId(null)}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700">Edit</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setOpenMenuId(null)}
-                      className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                      <span className="text-sm font-medium text-red-600">Delete</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-500 rounded-2xl flex items-center justify-center mb-4 text-4xl">
-                {category.image}
-              </div>
-              <h3 className="font-bold text-lg mb-2">{category.name}</h3>
-              <p className="text-sm text-gray-600">{category.servicesCount} Services</p>
-            </div>
+        {categories.length === 0 ? (
+          <div className="col-span-4 flex flex-col items-center justify-center py-20 text-gray-500">
+            <ImageIcon className="w-12 h-12 mb-3" />
+            <p className="text-lg font-semibold">No categories found</p>
+            <p className="text-sm">Try changing your search</p>
           </div>
-        ))}
+        ) : (
+          categories.map((category) => (
+            <div
+              key={category.id}
+              className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
+            >
+              {/* Three Dot Menu */}
+              <div className="absolute top-4 right-4">
+                <button
+                  onClick={() => handleMenuClick(category.id)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <MoreVertical className="w-5 h-5 text-gray-600" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {openMenuId === category.id && (
+                  <>
+                    {/* Backdrop */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setOpenMenuId(null)}
+                    />
+
+                    {/* Menu */}
+                    <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
+                      <button
+                        onClick={() => setOpenMenuId(null)}
+                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">Edit</span>
+                      </button>
+
+                      <button
+                        onClick={() => setOpenMenuId(null)}
+                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <span className="text-sm font-medium text-red-600">Delete</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center mb-4">
+                  {category.image ? (
+                    <img
+                      src={
+                        category.image.startsWith('http')
+                          ? category.image
+                          : `${IMAGE_BASE_URL}${category.image}`
+                      }
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  )}
+                </div>
+
+                <h3 className="font-bold text-lg mb-2">{category.name}</h3>
+
+                {category.servicesCount !== undefined && (
+                  <p className="text-sm text-gray-600">
+                    {category.servicesCount} Services
+                  </p>
+                )}
+              </div>
+
+            </div>
+          ))
+        )}
       </div>
 
       {/* Add Category Modal */}

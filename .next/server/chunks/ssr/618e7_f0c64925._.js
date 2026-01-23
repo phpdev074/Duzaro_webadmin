@@ -1,3 +1,0 @@
-module.exports=[45080,(a,b,c)=>{"use strict";b.exports=a.r(11043).vendored["react-ssr"].ReactDOM},78416,a=>{"use strict";let b=(0,a.i(20863).default)("dollar-sign",[["line",{x1:"12",x2:"12",y1:"2",y2:"22",key:"7eqyqh"}],["path",{d:"M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",key:"1b0p4s"}]]);a.s(["DollarSign",()=>b],78416)},39674,a=>{"use strict";let b=(0,a.i(20863).default)("calendar",[["path",{d:"M8 2v4",key:"1cmpym"}],["path",{d:"M16 2v4",key:"4m81vk"}],["rect",{width:"18",height:"18",x:"3",y:"4",rx:"2",key:"1hopcy"}],["path",{d:"M3 10h18",key:"8toen8"}]]);a.s(["Calendar",()=>b],39674)}];
-
-//# sourceMappingURL=618e7_f0c64925._.js.map
