@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { GetUserList } from '@/app/api/ApiHelper/userHelper';
 import { IMAGE_BASE_URL } from '@/app/api/api';
+import { createPortal } from 'react-dom';
 
 interface User {
   fullName: any;
@@ -140,7 +141,7 @@ export default function UserManagement() {
     // setUsers([]);
     try {
       const respo = await GetUserList({ search: debouncedSearch, page, limit });
-      
+
       setUsers(respo.data.data || []);
       setTotalPages(respo.data.pagination.totalPages || 1);
     } catch (error) {
@@ -154,9 +155,20 @@ export default function UserManagement() {
     GetUsersData();
   }, [debouncedSearch, page])
 
-  const handleMenuClick = (userId: string) => {
+  const handleMenuClick = (
+    userId: string,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    setMenuPosition({
+      top: rect.bottom + 8,
+      left: rect.right - 192, // dropdown width
+    });
+
     setOpenMenuId(openMenuId === userId ? null : userId);
   };
+
 
   const handleAction = (action: string, user: User) => {
     console.log(`${action} for user:`, user.fullName);
@@ -164,6 +176,12 @@ export default function UserManagement() {
     router.push("userdetails")
     setOpenMenuId(null);
   };
+
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
 
   return (
     <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -314,51 +332,75 @@ export default function UserManagement() {
                     <td className="px-6 py-4">
                       <div className="relative">
                         <button
-                          onClick={() => handleMenuClick(user.id)}
+                          onClick={(e) => handleMenuClick(user.id, e)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           <MoreVertical className="w-5 h-5 text-gray-600" />
                         </button>
 
                         {/* Dropdown Menu */}
-                        {openMenuId === user.id && (
-                          <>
-                            {/* Backdrop */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenMenuId(null)}
-                            />
+                        {openMenuId && menuPosition &&
+                          createPortal(
+                            <>
+                              {/* Backdrop */}
+                              <div
+                                className="fixed inset-0 z-[9998]"
+                                onClick={() => setOpenMenuId(null)}
+                              />
 
-                            {/* Menu */}
-                            <div className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                              <button
-                                onClick={() => handleAction('View Detail', user)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                              {/* Dropdown */}
+                              <div
+                                className="fixed z-[9999] w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2"
+                                style={{
+                                  top: menuPosition.top,
+                                  left: menuPosition.left,
+                                }}
                               >
-                                <Eye className="w-4 h-4 text-gray-600" />
-                                <span className="text-sm font-medium text-gray-700">View Detail</span>
-                              </button>
-
-                              {activeTab === 'users' && (
                                 <button
-                                  onClick={() => handleAction('Block User', user)}
-                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                                  onClick={() => {
+                                    const user = currentUsers.find(u => u.id === openMenuId)!;
+                                    handleAction("View Detail", user);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
                                 >
-                                  <Ban className="w-4 h-4 text-orange-600" />
-                                  <span className="text-sm font-medium text-orange-600">Block User</span>
+                                  <Eye className="w-4 h-4 text-gray-600" />
+                                  <span className="text-sm font-medium text-gray-700">
+                                    View Detail
+                                  </span>
                                 </button>
-                              )}
 
-                              <button
-                                onClick={() => handleAction('Delete User', user)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-600" />
-                                <span className="text-sm font-medium text-red-600">Delete User</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
+                                {activeTab === "users" && (
+                                  <button
+                                    onClick={() => {
+                                      const user = currentUsers.find(u => u.id === openMenuId)!;
+                                      handleAction("Block User", user);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                                  >
+                                    <Ban className="w-4 h-4 text-orange-600" />
+                                    <span className="text-sm font-medium text-orange-600">
+                                      Block User
+                                    </span>
+                                  </button>
+                                )}
+
+                                <button
+                                  onClick={() => {
+                                    const user = currentUsers.find(u => u.id === openMenuId)!;
+                                    handleAction("Delete User", user);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                  <span className="text-sm font-medium text-red-600">
+                                    Delete User
+                                  </span>
+                                </button>
+                              </div>
+                            </>,
+                            document.body
+                          )}
+
                       </div>
                     </td>
                   </tr>
