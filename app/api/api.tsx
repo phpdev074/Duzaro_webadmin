@@ -18,5 +18,6 @@ export const CATEGORY = '/admin/categories';
 
 export const SERVICES = '/service';
 export const SUB_SERVICES = '/admin/sub-categories';
+export const UPDATE_DELETE_SUB_SERVICES = '/sub-category';
 
 export const PROVIDER = '/providers';

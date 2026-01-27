@@ -7,9 +7,14 @@ import {
   Upload,
   Edit2,
   Trash2,
-  MoreVertical
+  MoreVertical,
+  ImageIcon
 } from 'lucide-react';
-import { CreateSubService, Get_SubServices, GetServices } from '@/app/api/ApiHelper/serviceHelper';
+import { CreateSubService, DeleteSubService, Get_SubServices, GetServices, UpdateSubService } from '@/app/api/ApiHelper/serviceHelper';
+import { IMAGE_BASE_URL } from '@/app/api/api';
+import { CreateCategory, DeleteCategory, UpdateCategory } from '@/app/api/ApiHelper/categoryHelper';
+import Swal from "sweetalert2";
+import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
 
 interface Service {
   id: string;
@@ -29,7 +34,7 @@ export default function ServiceManagement() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [showAddSubServiceModal, setShowAddSubServiceModal] = useState(false);
   const [serviceName, setServiceName] = useState('');
-  const [serviceImage, setServiceImage] = useState<string | null>(null);
+  const [serviceImage, setServiceImage] = useState<File | null>(null);
   const [selectedService, setSelectedService] = useState('');
   const [subServiceName, setSubServiceName] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -39,56 +44,74 @@ export default function ServiceManagement() {
   const [isEditSubService, setIsEditSubService] = useState(false);
   const [selectedSubService, setSelectedSubService] = useState<any>(null);
 
-  const services: Service[] = [
-    {
-      id: '1',
-      name: 'Doctor',
-      image: '👨‍⚕️',
-      subServicesCount: 12
-    },
-    {
-      id: '2',
-      name: 'Advocate',
-      image: '⚖️',
-      subServicesCount: 8
-    },
-    {
-      id: '3',
-      name: 'CA (Chartered Accountant)',
-      image: '💼',
-      subServicesCount: 15
-    },
-    {
-      id: '4',
-      name: 'Plumber',
-      image: '🔧',
-      subServicesCount: 6
-    },
-    {
-      id: '5',
-      name: 'Electrician',
-      image: '⚡',
-      subServicesCount: 9
-    },
-    {
-      id: '6',
-      name: 'Carpenter',
-      image: '🪚',
-      subServicesCount: 7
-    },
-    {
-      id: '7',
-      name: 'Tutor',
-      image: '📚',
-      subServicesCount: 20
-    },
-    {
-      id: '8',
-      name: 'Mechanic',
-      image: '🔩',
-      subServicesCount: 11
-    },
-  ];
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [subServiceSearch, setSubServiceSearch] = useState('');
+
+  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState('');
+  const [debouncedSubServiceSearch, setDebouncedSubServiceSearch] = useState('');
+
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [services, setServices] = useState<any[]>([])
+  const [totalPages, setTotalPages] = useState(1);
+  // const [servicesName, setServicesName] = useState('');
+  // const [servicesImage, setServicesImage] = useState<File | null>(null);
+  const [selectedServices, setSelectedServices] = useState<any>(null);
+  // const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const limit = 1000;
+
+  // const services: Service[] = [
+  //   {
+  //     id: '1',
+  //     name: 'Doctor',
+  //     image: '👨‍⚕️',
+  //     subServicesCount: 12
+  //   },
+  //   {
+  //     id: '2',
+  //     name: 'Advocate',
+  //     image: '⚖️',
+  //     subServicesCount: 8
+  //   },
+  //   {
+  //     id: '3',
+  //     name: 'CA (Chartered Accountant)',
+  //     image: '💼',
+  //     subServicesCount: 15
+  //   },
+  //   {
+  //     id: '4',
+  //     name: 'Plumber',
+  //     image: '🔧',
+  //     subServicesCount: 6
+  //   },
+  //   {
+  //     id: '5',
+  //     name: 'Electrician',
+  //     image: '⚡',
+  //     subServicesCount: 9
+  //   },
+  //   {
+  //     id: '6',
+  //     name: 'Carpenter',
+  //     image: '🪚',
+  //     subServicesCount: 7
+  //   },
+  //   {
+  //     id: '7',
+  //     name: 'Tutor',
+  //     image: '📚',
+  //     subServicesCount: 20
+  //   },
+  //   {
+  //     id: '8',
+  //     name: 'Mechanic',
+  //     image: '🔩',
+  //     subServicesCount: 11
+  //   },
+  // ];
 
   // const subServices: SubService[] = [
   //   {
@@ -146,11 +169,7 @@ export default function ServiceManagement() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setServiceImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setServiceImage(file);
     }
   };
 
@@ -166,19 +185,31 @@ export default function ServiceManagement() {
     if (!selectedService || !subServiceName) return;
 
     try {
-      await CreateSubService({
-        name: subServiceName,
-        categoryId: Number(selectedService), // 👈 send service ID
-        isDefault: true,
-      });
+      if (isEditSubService && selectedSubService) {
+        // 🔁 UPDATE
+        await UpdateSubService(selectedSubService.id, {
+          name: subServiceName,
+          categoryId: Number(selectedService),
+        });
+      } else {
+        // ➕ CREATE
+        await CreateSubService({
+          name: subServiceName,
+          categoryId: Number(selectedService),
+          isDefault: true,
+        });
+      }
 
+      // reset
       setSelectedService("");
       setSubServiceName("");
+      setSelectedSubService(null);
+      setIsEditSubService(false);
       setShowAddSubServiceModal(false);
 
-      fetchSubServices(); // refresh list
+      fetchSubServices();
     } catch (err) {
-      console.error("Create sub-service error", err);
+      console.error("Sub-service submit error", err);
     }
   };
 
@@ -187,10 +218,47 @@ export default function ServiceManagement() {
   };
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedServiceSearch(serviceSearch);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [serviceSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSubServiceSearch(subServiceSearch);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [subServiceSearch]);
+
+
+  const GetUsersData = async () => {
+    setIsLoading(true);
+    // setUsers([]);
+    try {
+      const respo = await GetServices({ search: debouncedServiceSearch, page, limit });
+      console.log(respo.data.data)
+      setServices(respo.data.data || []);
+      setTotalPages(respo.data.pagination.totalPages || 1);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    GetUsersData();
+  }, [debouncedServiceSearch, page])
+
+  useEffect(() => {
     if (activeTab === "sub-services") {
       fetchSubServices();
     }
-  }, [activeTab]);
+  }, [activeTab, debouncedSubServiceSearch]);
 
   useEffect(() => {
     if (showAddSubServiceModal) {
@@ -200,7 +268,9 @@ export default function ServiceManagement() {
 
   const fetchSubServices = async () => {
     try {
-      const res = await Get_SubServices({});
+      const res = await Get_SubServices({
+        search: debouncedSubServiceSearch,
+      });
 
       setSubServices(res.data?.data || []);
     } catch (err) {
@@ -216,6 +286,175 @@ export default function ServiceManagement() {
     } catch (err) {
       console.error("Fetch services error", err);
     }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    const result = await Swal.fire({
+      title: "Delete Category?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await DeleteCategory(categoryId);
+
+      Swal.fire({
+        title: "Deleted!",
+        text: "Category has been deleted successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setOpenMenuId(null);
+      GetUsersData();
+    } catch (error) {
+      console.error("Delete category error:", error);
+
+      Swal.fire({
+        title: "Error",
+        text: "Failed to delete category.",
+        icon: "error",
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!serviceName || !serviceImage) return;
+
+    try {
+      // 1️⃣ Upload image
+      const uploadRes = await UploadProviderLogo(serviceImage);
+
+      const imageUrl = uploadRes.data?.filePath;
+      // ⚠️ adjust key if backend returns differently
+
+      if (!imageUrl) {
+        alert("Image upload failed");
+        return;
+      }
+
+      // 2️⃣ Create category
+      await CreateCategory({
+        name: serviceName,
+        image: imageUrl,
+        isDefault: 'true',
+        categoryType: "services",
+      });
+
+      // 3️⃣ Reset + close modal
+      setServiceName("");
+      setServiceImage(null);
+      setShowAddServiceModal(false);
+
+      // 4️⃣ Refresh list
+      GetUsersData();
+
+    } catch (error) {
+      console.error("Create category error:", error);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!serviceName || !selectedServices) return;
+
+    try {
+      let imageUrl = selectedServices.image;
+
+      // Upload only if new image selected
+      if (serviceImage) {
+        const uploadRes = await UploadProviderLogo(serviceImage);
+        imageUrl = uploadRes.data?.filePath;
+
+        if (!imageUrl) {
+          alert("Image upload failed");
+          return;
+        }
+      }
+
+      await UpdateCategory(selectedServices.id, {
+        name: serviceName,
+        image: imageUrl,
+      });
+
+      resetModal();
+      GetUsersData();
+    } catch (error) {
+      console.error("Update category error:", error);
+    }
+  };
+
+  const resetModal = () => {
+    setServiceName("");
+    setServiceImage(null);
+    setSelectedServices(null);
+    setIsEditMode(false);
+    setShowAddServiceModal(false);
+  };
+
+  const handleEditCategory = (service: any) => {
+    setIsEditMode(true);
+    setSelectedServices(service);
+    setServiceName(service.name);
+    setServiceImage(null); // image optional on edit
+    setShowAddServiceModal(true);
+    setOpenMenuId(null);
+  };
+
+  const handleDeleteSubService = async (subServiceId: string) => {
+    const result = await Swal.fire({
+      title: "Delete Sub-Service?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await DeleteSubService(subServiceId);
+
+      Swal.fire({
+        title: "Deleted!",
+        text: "Sub-service deleted successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setOpenMenuId(null);
+      fetchSubServices(); // 🔥 refresh sub-services list
+    } catch (error) {
+      console.error("Delete sub-service error:", error);
+
+      Swal.fire({
+        title: "Error",
+        text: "Failed to delete sub-service.",
+        icon: "error",
+      });
+    }
+  };
+
+  const handleEditSubService = (subService: any) => {
+    setIsEditSubService(true);
+    setSelectedSubService(subService);
+
+    setSubServiceName(subService.name);
+    setSelectedService(String(subService.category.id)); // 👈 preselect service
+
+    setShowAddSubServiceModal(true);
+    setOpenMenuId(null);
   };
 
   return (
@@ -272,6 +511,12 @@ export default function ServiceManagement() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
+            value={activeTab === 'services' ? serviceSearch : subServiceSearch}
+            onChange={(e) =>
+              activeTab === 'services'
+                ? setServiceSearch(e.target.value)
+                : setSubServiceSearch(e.target.value)
+            }
             placeholder={`Search ${activeTab === 'services' ? 'services' : 'sub-services'}...`}
             className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
           />
@@ -307,7 +552,7 @@ export default function ServiceManagement() {
                     {/* Menu */}
                     <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
                       <button
-                        onClick={() => setOpenMenuId(null)}
+                        onClick={() => handleEditCategory(service)}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                       >
                         <Edit2 className="w-4 h-4 text-gray-600" />
@@ -315,7 +560,7 @@ export default function ServiceManagement() {
                       </button>
 
                       <button
-                        onClick={() => setOpenMenuId(null)}
+                        onClick={() => handleDeleteCategory(service.id)}
                         className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -328,10 +573,22 @@ export default function ServiceManagement() {
 
               <div className="flex flex-col items-center text-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 text-4xl">
-                  {service.image}
+                  {service.image ? (
+                    <img
+                      src={
+                        service.image.startsWith('http')
+                          ? service.image
+                          : `${IMAGE_BASE_URL}${service.image}`
+                      }
+                      alt={service.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="w-10 h-10 text-gray-400" />
+                  )}
                 </div>
                 <h3 className="font-bold text-lg mb-2">{service.name}</h3>
-                <p className="text-sm text-gray-600">{service.subServicesCount} Sub-Services</p>
+                {/* <p className="text-sm text-gray-600">{service.subServicesCount} Sub-Services</p> */}
               </div>
             </div>
           ))}
@@ -352,52 +609,51 @@ export default function ServiceManagement() {
             </thead>
             <tbody>
               {subServices.map((subService, index) => (
-                <tr key={subService.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr
+                  key={subService.id}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4 text-sm">{index + 1}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{subService.category.name}</td>
+                  <td className="px-6 py-4 text-sm font-medium">
+                    {subService.category.name}
+                  </td>
                   <td className="px-6 py-4 text-sm">{subService.name}</td>
+
                   <td className="px-6 py-4 text-right">
                     <div className="relative inline-block">
                       <button
                         onClick={() => handleMenuClick(`sub-${subService.id}`)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200"
                       >
                         <MoreVertical className="w-5 h-5 text-gray-600" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {openMenuId === `sub-${subService.id}` && (
-                        <>
-                          {/* Backdrop */}
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setOpenMenuId(null)}
-                          />
+                        <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border py-2 z-20">
+                          {/* ✅ EDIT */}
+                          <button
+                            onClick={() => handleEditSubService(subService)}
+                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                          >
+                            <Edit2 className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm font-medium text-gray-700">Edit</span>
+                          </button>
 
-                          {/* Menu */}
-                          <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                            <button
-                              onClick={() => setOpenMenuId(null)}
-                              className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                            >
-                              <Edit2 className="w-4 h-4 text-gray-600" />
-                              <span className="text-sm font-medium text-gray-700">Edit</span>
-                            </button>
-
-                            <button
-                              onClick={() => setOpenMenuId(null)}
-                              className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                              <span className="text-sm font-medium text-red-600">Delete</span>
-                            </button>
-                          </div>
-                        </>
+                          {/* DELETE */}
+                          <button
+                            onClick={() => handleDeleteSubService(subService.id)}
+                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <span className="text-sm font-medium text-red-600">Delete</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </td>
                 </tr>
               ))}
+
             </tbody>
           </table>
         </div>
@@ -426,45 +682,51 @@ export default function ServiceManagement() {
             <div className="space-y-6">
               {/* Image Upload */}
               <div>
-                <label className="block text-sm font-semibold mb-2">Service Image</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#FFC93C] transition-colors">
-                  {serviceImage ? (
-                    <div className="relative">
+                <label className="block text-sm font-semibold mb-2">
+                  Service Image
+                </label>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
+
+                  {/* IMAGE PREVIEW */}
+                  {(serviceImage || (isEditMode && selectedServices?.image)) && (
+                    <div className="mb-4">
                       <img
-                        src={serviceImage}
+                        src={
+                          serviceImage
+                            ? URL.createObjectURL(serviceImage)
+                            : selectedServices.image.startsWith("http")
+                              ? selectedServices.image
+                              : `${IMAGE_BASE_URL}${selectedServices.image}`
+                        }
                         alt="Service preview"
                         className="w-32 h-32 object-cover rounded-xl mx-auto"
                       />
-                      <button
-                        onClick={() => setServiceImage(null)}
-                        className="absolute top-0 right-1/2 translate-x-16 -translate-y-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                  ) : (
-                    <>
-                      <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                      <p className="text-sm text-gray-600 mb-3">
-                        Click to upload or drag and drop
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="service-image-upload"
-                      />
-                      <label
-                        htmlFor="service-image-upload"
-                        className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-semibold transition-colors"
-                      >
-                        Choose File
-                      </label>
-                    </>
                   )}
+
+                  <Upload className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600 mb-3">
+                    {isEditMode ? "Upload new image to replace" : "Upload service image"}
+                  </p>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="service-image-upload"
+                  />
+
+                  <label
+                    htmlFor="service-image-upload"
+                    className="inline-block px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-semibold"
+                  >
+                    Choose File
+                  </label>
                 </div>
               </div>
+
 
               {/* Service Name */}
               <div>
@@ -480,11 +742,11 @@ export default function ServiceManagement() {
 
               {/* Submit Button */}
               <button
-                onClick={handleServiceSubmit}
-                disabled={!serviceName || !serviceImage}
+                onClick={isEditMode ? handleUpdateCategory : handleSubmit}
+                disabled={!serviceName || (!isEditMode && !serviceImage)}
                 className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                Submit
+                {isEditMode ? "Update" : "Submit"}
               </button>
             </div>
           </div>

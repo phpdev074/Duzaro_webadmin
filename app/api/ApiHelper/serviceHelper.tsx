@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BASE_URL, CATEGORY, GET, POST, SERVICES, SUB_SERVICES } from "../api";
+import { BASE_URL, CATEGORY, DELETE, GET, POST, PUT, SERVICES, SUB_SERVICES, UPDATE_DELETE_SUB_SERVICES } from "../api";
 
 export const GetServices = ({
     page = 1,
@@ -60,3 +60,30 @@ export const CreateSubService = (payload: any) =>
         url: "/sub-category",
         data: payload,
     });
+
+export const DeleteSubService = (id: string) => {
+    const token = localStorage.getItem("admin_token");
+
+    return axios({
+        baseURL: BASE_URL,
+        method: DELETE,
+        url: `${UPDATE_DELETE_SUB_SERVICES}/${id}`,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
+
+export const UpdateSubService = (id: string, payload: any) => {
+    const token = localStorage.getItem("admin_token");
+
+    return axios({
+        baseURL: BASE_URL,
+        method: PUT,
+        url: `${UPDATE_DELETE_SUB_SERVICES}/${id}`,
+        data: payload,
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};
