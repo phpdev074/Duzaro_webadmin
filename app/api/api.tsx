@@ -1,5 +1,6 @@
-export const BASE_URL = 'http://82.112.231.71:5517';
-export const IMAGE_BASE_URL = 'http://82.112.231.71:5517';
+export const BASE_URL = 'https://api.duezaro.com';
+export const IMAGE_BASE_URL = 'https://api.duezaro.com';
+// export const IMAGE_BASE_URL = 'http://82.112.231.71:5517';
 
 export const POST = 'POST';
 export const GET = 'GET';

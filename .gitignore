@@ -10,7 +10,7 @@
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
-!.next
+.next
 
 # Vite logs files
 vite.config.js.timestamp-*
