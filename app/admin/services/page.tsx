@@ -59,6 +59,8 @@ export default function ServiceManagement() {
   const [selectedServices, setSelectedServices] = useState<any>(null);
   // const [showAddModal, setShowAddModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isServiceSubmitting, setIsServiceSubmitting] = useState(false);
+  const [isSubServiceSubmitting, setIsSubServiceSubmitting] = useState(false);
 
   const limit = 1000;
 
@@ -185,6 +187,8 @@ export default function ServiceManagement() {
     if (!selectedService || !subServiceName) return;
 
     try {
+      setIsSubServiceSubmitting(true);
+
       if (isEditSubService && selectedSubService) {
         // 🔁 UPDATE
         await UpdateSubService(selectedSubService.id, {
@@ -208,8 +212,20 @@ export default function ServiceManagement() {
       setShowAddSubServiceModal(false);
 
       fetchSubServices();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sub-service submit error", err);
+
+      const errorMessage =
+        err?.response?.data?.message ||
+        "Something went wrong. Please try again.";
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: errorMessage,
+      });
+    } finally {
+      setIsSubServiceSubmitting(false);
     }
   };
 
@@ -330,6 +346,7 @@ export default function ServiceManagement() {
     if (!serviceName || !serviceImage) return;
 
     try {
+      setIsServiceSubmitting(true);
       // 1️⃣ Upload image
       const uploadRes = await UploadProviderLogo(serviceImage);
 
@@ -359,6 +376,8 @@ export default function ServiceManagement() {
 
     } catch (error) {
       console.error("Create category error:", error);
+    } finally {
+      setIsServiceSubmitting(false);
     }
   };
 
@@ -366,6 +385,8 @@ export default function ServiceManagement() {
     if (!serviceName || !selectedServices) return;
 
     try {
+      setIsServiceSubmitting(true);
+
       let imageUrl = selectedServices.image;
 
       // Upload only if new image selected
@@ -388,6 +409,8 @@ export default function ServiceManagement() {
       GetUsersData();
     } catch (error) {
       console.error("Update category error:", error);
+    } finally {
+      setIsServiceSubmitting(false);
     }
   };
 
@@ -572,7 +595,7 @@ export default function ServiceManagement() {
               </div>
 
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-500 rounded-2xl flex items-center justify-center mb-4 text-4xl">
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 text-4xl">
                   {service.image ? (
                     <img
                       src={
@@ -743,11 +766,21 @@ export default function ServiceManagement() {
               {/* Submit Button */}
               <button
                 onClick={isEditMode ? handleUpdateCategory : handleSubmit}
-                disabled={!serviceName || (!isEditMode && !serviceImage)}
-                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled={
+                  isServiceSubmitting ||
+                  !serviceName ||
+                  (!isEditMode && !serviceImage)
+                }
+                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isEditMode ? "Update" : "Submit"}
+                {isServiceSubmitting && (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                {isEditMode
+                  ? isServiceSubmitting ? "Updating..." : "Update"
+                  : isServiceSubmitting ? "Submitting..." : "Submit"}
               </button>
+
             </div>
           </div>
         </div>
@@ -808,10 +841,19 @@ export default function ServiceManagement() {
               {/* Submit Button */}
               <button
                 onClick={handleSubServiceSubmit}
-                disabled={!selectedService || !subServiceName}
-                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled={
+                  isSubServiceSubmitting ||
+                  !selectedService ||
+                  !subServiceName
+                }
+                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Submit
+                {isSubServiceSubmitting && (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                {isEditSubService
+                  ? isSubServiceSubmitting ? "Updating..." : "Update"
+                  : isSubServiceSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </div>

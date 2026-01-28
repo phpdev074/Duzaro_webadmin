@@ -35,6 +35,7 @@ export default function CategoryManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [page, setPage] = useState(1);
 
   const limit = 1000;
@@ -129,6 +130,7 @@ export default function CategoryManagement() {
     if (!categoryName || !categoryImage) return;
 
     try {
+      setIsSubmitting(true);
       // 1️⃣ Upload image
       const uploadRes = await UploadProviderLogo(categoryImage);
 
@@ -158,6 +160,8 @@ export default function CategoryManagement() {
 
     } catch (error) {
       console.error("Create category error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -216,6 +220,8 @@ export default function CategoryManagement() {
     if (!categoryName || !selectedCategory) return;
 
     try {
+      setIsSubmitting(true);
+
       let imageUrl = selectedCategory.image;
 
       // Upload only if new image selected
@@ -238,6 +244,8 @@ export default function CategoryManagement() {
       GetUsersData();
     } catch (error) {
       console.error("Update category error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -461,10 +469,19 @@ export default function CategoryManagement() {
               {/* Submit Button */}
               <button
                 onClick={isEditMode ? handleUpdateCategory : handleSubmit}
-                disabled={!categoryName || (!isEditMode && !categoryImage)}
-                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled={
+                  isSubmitting ||
+                  !categoryName ||
+                  (!isEditMode && !categoryImage)
+                }
+                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isEditMode ? "Update" : "Submit"}
+                {isSubmitting && (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                {isEditMode
+                  ? isSubmitting ? "Updating..." : "Update"
+                  : isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </div>

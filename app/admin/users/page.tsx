@@ -182,6 +182,20 @@ export default function UserManagement() {
     left: number;
   } | null>(null);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, true);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [openMenuId]);
+
 
   return (
     <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
