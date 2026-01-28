@@ -15,7 +15,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
         <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <div className={`flex items-center gap-1 text-sm font-semibold ${
+        {/* <div className={`flex items-center gap-1 text-sm font-semibold ${
           stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
         }`}>
           {stat.trend === 'up' ? (
@@ -24,7 +24,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
             <TrendingDown className="w-4 h-4" />
           )}
           {stat.change}
-        </div>
+        </div> */}
       </div>
       <div className="text-3xl font-bold mb-1">{stat.value}</div>
       <div className="text-sm text-gray-600">{stat.title}</div>

@@ -42,6 +42,9 @@ export default function UserManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [blockedUsers, setBlockedUsers] = useState<User[]>([]);
+  const [blockedTotalPages, setBlockedTotalPages] = useState(1);
+  const [blockedPage, setBlockedPage] = useState(1);
 
   const limit = 10;
   const router = useRouter()
@@ -121,9 +124,7 @@ export default function UserManagement() {
   //   }
   // ];
 
-  const blockedUsers: User[] = [
-
-  ];
+  // const blockedUsers: User[] = [];
 
   const currentUsers = activeTab === 'users' ? users : blockedUsers;
 
@@ -140,10 +141,20 @@ export default function UserManagement() {
     setIsLoading(true);
     // setUsers([]);
     try {
-      const respo = await GetUserList({ search: debouncedSearch, page, limit });
+      const respo = await GetUserList({
+        search: debouncedSearch,
+        page: activeTab === "users" ? page : blockedPage,
+        limit,
+        isBlocked: activeTab === "users" ? "false" : "true",
+      });
 
-      setUsers(respo.data.data || []);
-      setTotalPages(respo.data.pagination.totalPages || 1);
+      if (activeTab === "users") {
+        setUsers(respo.data.data || []);
+        setTotalPages(respo.data.pagination.totalPages || 1);
+      } else {
+        setBlockedUsers(respo.data.data || []);
+        setBlockedTotalPages(respo.data.pagination.totalPages || 1);
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -153,7 +164,15 @@ export default function UserManagement() {
 
   useEffect(() => {
     GetUsersData();
-  }, [debouncedSearch, page])
+  }, [debouncedSearch, page, blockedPage, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "users") {
+      setPage(1);
+    } else {
+      setBlockedPage(1);
+    }
+  }, [activeTab]);
 
   const handleMenuClick = (
     userId: string,
@@ -168,7 +187,6 @@ export default function UserManagement() {
 
     setOpenMenuId(openMenuId === userId ? null : userId);
   };
-
 
   const handleAction = (action: string, user: User) => {
     console.log(`${action} for user:`, user.fullName);
@@ -206,7 +224,7 @@ export default function UserManagement() {
           <p className="text-sm text-gray-600">Manage all users and their access</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" />
             <span className="font-semibold text-sm">Export</span>
@@ -215,7 +233,7 @@ export default function UserManagement() {
             <UserPlus className="w-4 h-4" />
             <span className="font-semibold text-sm">Add New User</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Tabs */}
@@ -432,8 +450,16 @@ export default function UserManagement() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={
+                activeTab === "users"
+                  ? page === 1
+                  : blockedPage === 1
+              }
+              onClick={() =>
+                activeTab === "users"
+                  ? setPage((p) => Math.max(p - 1, 1))
+                  : setBlockedPage((p) => Math.max(p - 1, 1))
+              }
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
       ${page === 1
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -444,12 +470,21 @@ export default function UserManagement() {
             </button>
 
             <span className="text-sm text-gray-600 font-medium">
-              Page {page} of {totalPages}
+              Page {activeTab === "users" ? page : blockedPage} of{" "}
+              {activeTab === "users" ? totalPages : blockedTotalPages}
             </span>
 
             <button
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={
+                activeTab === "users"
+                  ? page === totalPages
+                  : blockedPage === blockedTotalPages
+              }
+              onClick={() =>
+                activeTab === "users"
+                  ? setPage((p) => Math.min(p + 1, totalPages))
+                  : setBlockedPage((p) => Math.min(p + 1, blockedTotalPages))
+              }
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors
       ${page === totalPages
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'

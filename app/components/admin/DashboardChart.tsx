@@ -8,6 +8,7 @@ const data = [
 ];
 
 export default function DashboardChart() {
+
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm">
       <h2 className="font-bold mb-6">User Distribution</h2>

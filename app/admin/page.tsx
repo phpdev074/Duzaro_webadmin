@@ -19,18 +19,23 @@
 // }
 
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, Briefcase, DollarSign, Calendar } from 'lucide-react';
 import StatsCard from '@/app/components/dashboard/StatsCard';
 import UserDistributionChart from '@/app/components/dashboard/UserDistributionChart';
 import QuickActions from '@/app/components/dashboard/QuickActions';
 import { StatCard } from '@/app/types';
+import { GetDashboardData } from '../api/ApiHelper/dashboardHelper';
 
 const Dashboard: React.FC = () => {
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const stats: StatCard[] = [
     {
       title: 'Total Users',
-      value: '0',
+      value: dashboardData ? dashboardData.userCount : '0',
       change: '+12.5%',
       trend: 'up',
       icon: Users,
@@ -38,7 +43,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Active Services',
-      value: '0',
+      value: dashboardData ? dashboardData.serviceCount : '0',
       change: '+8.2%',
       trend: 'up',
       icon: Briefcase,
@@ -62,6 +67,32 @@ const Dashboard: React.FC = () => {
     },
   ];
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+
+        const res = await GetDashboardData();
+        console.log(res.data.data)
+        const stats = res.data.data;
+
+        setDashboardData(stats);
+
+        setData([
+          { name: "Total Users", value: Number(stats.userCount) || 0, color: "#3B82F6" },
+          { name: "Premium Users", value: Number(stats.premiumUsers) || 0, color: "#FFC93C" },
+          { name: "Free Users", value: Number(stats.freeUsers) || 0, color: "#10B981" },
+        ]);
+
+      } catch (err) {
+        console.error("Dashboard chart error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <>
       {/* Stats Grid */}
@@ -72,7 +103,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        <UserDistributionChart />
+        <UserDistributionChart data={data} loading={loading} />
         <QuickActions />
       </div>
     </>

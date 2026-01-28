@@ -10,6 +10,8 @@ export const DELETE = 'DELETE';
 
 export const UPLOAD = '/user/upload-profile-picture';
 
+export const DASHBOARD = '/admin/dashboard';
+
 export const LOGIN = '/admin/login';
 
 export const USERS = '/admin/users/list';
