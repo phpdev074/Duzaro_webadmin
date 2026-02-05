@@ -194,6 +194,7 @@ export default function ServiceManagement() {
         await UpdateSubService(selectedSubService.id, {
           name: subServiceName,
           categoryId: Number(selectedService),
+          subCatType: "services"
         });
       } else {
         // ➕ CREATE
@@ -201,6 +202,7 @@ export default function ServiceManagement() {
           name: subServiceName,
           categoryId: Number(selectedService),
           isDefault: true,
+          subCatType: "services"
         });
       }
 
@@ -285,7 +287,7 @@ export default function ServiceManagement() {
   const fetchSubServices = async () => {
     try {
       const res = await Get_SubServices({
-        search: debouncedSubServiceSearch,
+        search: debouncedSubServiceSearch, services: 'services'
       });
 
       setSubServices(res.data?.data || []);
@@ -549,7 +551,13 @@ export default function ServiceManagement() {
       {/* Services Tab Content */}
       {activeTab === 'services' && (
         <div className="grid grid-cols-4 gap-6">
-          {services.map((service) => (
+          {services.length === 0 ? (
+            <div className="col-span-4 flex flex-col items-center justify-center py-20 text-gray-500">
+              <ImageIcon className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">No services found</p>
+              {/* <p className="text-sm">Try changing your search</p> */}
+            </div>
+          ) : (services.map((service) => (
             <div
               key={service.id}
               className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
@@ -614,71 +622,88 @@ export default function ServiceManagement() {
                 {/* <p className="text-sm text-gray-600">{service.subServicesCount} Sub-Services</p> */}
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       )}
 
       {/* Sub-Services Tab Content */}
       {activeTab === 'sub-services' && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">S.No</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Service Name</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Sub-Service Name</th>
-                <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subServices.map((subService, index) => (
-                <tr
-                  key={subService.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm">{index + 1}</td>
-                  <td className="px-6 py-4 text-sm font-medium">
-                    {subService.category.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm">{subService.name}</td>
-
-                  <td className="px-6 py-4 text-right">
-                    <div className="relative inline-block">
-                      <button
-                        onClick={() => handleMenuClick(`sub-${subService.id}`)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200"
-                      >
-                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                      </button>
-
-                      {openMenuId === `sub-${subService.id}` && (
-                        <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border py-2 z-20">
-                          {/* ✅ EDIT */}
-                          <button
-                            onClick={() => handleEditSubService(subService)}
-                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                          >
-                            <Edit2 className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm font-medium text-gray-700">Edit</span>
-                          </button>
-
-                          {/* DELETE */}
-                          <button
-                            onClick={() => handleDeleteSubService(subService.id)}
-                            className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                            <span className="text-sm font-medium text-red-600">Delete</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm">
+          {subServices.length === 0 ? (
+            /* 🔴 EMPTY STATE */
+            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+              <ImageIcon className="w-12 h-12 mb-3" />
+              <p className="text-lg font-semibold">No sub-services found</p>
+              {/* <p className="text-sm">Try changing your search</p> */}
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">S.No</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Service Name</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Sub-Service Name</th>
+                  <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
-              ))}
+              </thead>
+              <tbody>
+                {subServices.map((subService, index) => (
+                  <tr
+                    key={subService.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm">{index + 1}</td>
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {subService.category.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm">{subService.name}</td>
 
-            </tbody>
-          </table>
+                    <td className="px-6 py-4 text-right">
+                      <div className="relative inline-block">
+                        <button
+                          onClick={() => handleMenuClick(`sub-${subService.id}`)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200"
+                        >
+                          <MoreVertical className="w-5 h-5 text-gray-600" />
+                        </button>
+
+                        {openMenuId === `sub-${subService.id}` && (
+                          <>
+                            {/* 🔴 CLICK ANYWHERE TO CLOSE */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenMenuId(null)}
+                            />
+                            <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border py-2 z-20">
+                              {/* ✅ EDIT */}
+                              <button
+                                onClick={() => handleEditSubService(subService)}
+                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                              >
+                                <Edit2 className="w-4 h-4 text-gray-600" />
+                                <span className="text-sm font-medium text-gray-700">Edit</span>
+                              </button>
+
+                              {/* DELETE */}
+                              <button
+                                onClick={() => handleDeleteSubService(subService.id)}
+                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                                <span className="text-sm font-medium text-red-600">Delete</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 

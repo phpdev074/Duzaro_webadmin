@@ -32,11 +32,13 @@ export const Get_SubServices = ({
     limit = 100,
     search = '',
     categoryType = 'category',
+    services = '',
 }: {
     page?: number;
     limit?: number;
     search?: string;
     categoryType?: string;
+    services?: string;
 } = {}) => {
     const token =
         localStorage.getItem('admin_token')
@@ -46,7 +48,7 @@ export const Get_SubServices = ({
         method: GET,
         url: `${SUB_SERVICES}?page=${page}&limit=${limit}&search=${encodeURIComponent(
             search
-        )}&categoryType=${categoryType}`,
+        )}&categoryType=${categoryType}&subCatType=${services}`,
         headers: {
             Authorization: token ? `Bearer ${token}` : '',
         },
