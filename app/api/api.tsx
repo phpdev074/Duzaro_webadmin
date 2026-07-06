@@ -23,3 +23,5 @@ export const SUB_SERVICES = '/admin/sub-categories';
 export const UPDATE_DELETE_SUB_SERVICES = '/sub-category';
 
 export const PROVIDER = '/providers';
+export const FAQ = '/faq';
+export const CONTACT_US = '/contactus';

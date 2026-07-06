@@ -11,6 +11,8 @@ import {
   Settings,
   ChevronDown,
   LogOut,
+  CircleHelp,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -22,6 +24,8 @@ const menu = [
   { name: "Services", href: "/admin/services", icon: Briefcase },
   { name: "Content", href: "/admin/content", icon: FileText },
   { name: "Subscription", href: "/admin/subscription", icon: CreditCard },
+  { name: "FAQ", href: "/admin/faq", icon: CircleHelp },
+  { name: "Contact Us", href: "/admin/contactus", icon: Mail },
   { name: "Setting", href: "/admin/settings", icon: Settings },
 ];
 
