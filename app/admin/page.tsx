@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
   const stats: StatCard[] = [
     {
       title: 'Total Users',
-      value: dashboardData ? dashboardData.userCount : '0',
+      value: dashboardData ? (dashboardData.users?.userCount ?? 0).toString() : '0',
       change: '+12.5%',
       trend: 'up',
       icon: Users,
@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Active Services',
-      value: dashboardData ? dashboardData.serviceCount : '0',
+      value: dashboardData ? (dashboardData.categories?.serviceCount ?? 0).toString() : '0',
       change: '+8.2%',
       trend: 'up',
       icon: Briefcase,
@@ -79,9 +79,8 @@ const Dashboard: React.FC = () => {
         setDashboardData(stats);
 
         setData([
-          { name: "Total Users", value: Number(stats.userCount) || 0, color: "#3B82F6" },
-          { name: "Premium Users", value: Number(stats.premiumUsers) || 0, color: "#FFC93C" },
-          { name: "Free Users", value: Number(stats.freeUsers) || 0, color: "#10B981" },
+          { name: "Users", value: Number(stats?.users?.userCount) || 0, color: "#3B82F6" },
+          { name: "Vendors", value: Number(stats?.users?.vendorCount) || 0, color: "#FFC93C" },
         ]);
 
       } catch (err) {
