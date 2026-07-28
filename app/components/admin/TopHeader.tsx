@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { GetAdminProfile } from "@/app/api/ApiHelper/adminProfileHelper";
+import { IMAGE_BASE_URL } from "@/app/api/api";
 
 export default function TopHeader() {
   const pathname = usePathname();
   const [adminName, setAdminName] = useState<string>("");
+  const [adminImage, setAdminImage] = useState<string>("");
 
   const title =
     pathname === "/admin"
@@ -19,6 +21,7 @@ export default function TopHeader() {
         if (res.data?.data) {
           const admin = res.data.data;
           setAdminName(admin.name || admin.email || "Admin");
+          setAdminImage(admin.image || "");
           localStorage.setItem("admin_user", JSON.stringify(admin));
         }
       } catch (error) {
@@ -28,6 +31,7 @@ export default function TopHeader() {
           try {
             const parsed = JSON.parse(storedAdmin);
             setAdminName(parsed.name || parsed.email || "Admin");
+            setAdminImage(parsed.image || "");
           } catch { }
         }
       }
@@ -63,8 +67,16 @@ export default function TopHeader() {
             </p>
             <p className="text-xs text-gray-500 font-medium">Administrator</p>
           </div>
-          <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-gray-900 to-black rounded-full flex items-center justify-center text-white font-bold text-sm lg:text-base shadow-sm border border-gray-200">
-            {initials}
+          <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-gray-900 to-black rounded-full flex items-center justify-center text-white font-bold text-sm lg:text-base shadow-sm border border-gray-200 overflow-hidden">
+            {adminImage ? (
+              <img
+                src={adminImage.startsWith('http') ? adminImage : `${IMAGE_BASE_URL}${adminImage}`}
+                alt={adminName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              initials
+            )}
           </div>
         </div>
       </div>

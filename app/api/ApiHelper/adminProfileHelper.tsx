@@ -16,31 +16,39 @@ export const GetAdminProfile = () => {
 };
 
 // Update Admin Profile (Name, Email, Phone, Image)
-export const UpdateAdminProfile = (payload: { name?: string; email?: string; phone?: string; image?: string }) => {
+export const UpdateAdminProfile = async (payload: { name?: string; email?: string; phone?: string; image?: string }) => {
     const token = localStorage.getItem('admin_token');
 
-    return axios({
-        baseURL: BASE_URL,
-        method: PATCH,
-        url: ADMIN_PROFILE,
-        data: payload,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    try {
+        return await axios({
+            baseURL: BASE_URL,
+            method: PATCH,
+            url: ADMIN_PROFILE,
+            data: payload,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+    } catch (error: any) {
+        return error.response || { status: 500, data: { message: "Network error" } };
+    }
 };
 
 // Change Admin Password
-export const ChangeAdminPassword = (payload: { oldPassword: string; newPassword: string }) => {
+export const ChangeAdminPassword = async (payload: { oldPassword: string; newPassword: string }) => {
     const token = localStorage.getItem('admin_token');
 
-    return axios({
-        baseURL: BASE_URL,
-        method: POST,
-        url: CHANGE_PASSWORD,
-        data: payload,
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    try {
+        return await axios({
+            baseURL: BASE_URL,
+            method: POST,
+            url: CHANGE_PASSWORD,
+            data: payload,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+    } catch (error: any) {
+        return error.response || { status: 500, data: { message: "Network error" } };
+    }
 };
