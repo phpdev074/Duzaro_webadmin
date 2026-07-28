@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   Search,
   Plus,
@@ -24,7 +24,7 @@ interface Category {
   servicesCount: number;
 }
 
-export default function CategoryManagement() {
+function CategoryContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -449,44 +449,21 @@ export default function CategoryManagement() {
                 key={category.id}
                 className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
               >
-                {/* Three Dot Menu */}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex items-center gap-1">
                   <button
-                    onClick={() => handleMenuClick(category.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                    onClick={() => handleEditCategory(category)}
+                    className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-black transition-colors"
+                    title="Edit"
                   >
-                    <MoreVertical className="w-5 h-5 text-gray-600" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
-
-                  {/* Dropdown Menu */}
-                  {openMenuId === category.id && (
-                    <>
-                      {/* Backdrop */}
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setOpenMenuId(null)}
-                      />
-
-                      {/* Menu */}
-                      <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20">
-                        <button
-                          onClick={() => handleEditCategory(category)}
-                          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4 text-gray-600" />
-                          <span className="text-sm font-medium text-gray-700">Edit</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteCategory(category.id)}
-                          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                          <span className="text-sm font-medium text-red-600">Delete</span>
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <button
+                    onClick={() => handleDeleteCategory(category.id)}
+                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <div className="flex flex-col items-center text-center">
@@ -802,5 +779,17 @@ export default function CategoryManagement() {
 
       <CustomConfirmModal {...confirmModal} />
     </div>
+  );
+}
+
+export default function CategoryManagement() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-gray-300 border-t-[#FFC93C] rounded-full animate-spin" />
+      </div>
+    }>
+      <CategoryContent />
+    </Suspense>
   );
 }
