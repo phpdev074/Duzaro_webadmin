@@ -8,26 +8,34 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ stat }) => {
   const Icon = stat.icon;
-  
+  const isUp = stat.trend === 'up';
+
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
+    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 lg:p-4.5 border border-gray-200/80 shadow-2xs hover:shadow-sm hover:border-gray-300 transition-all group flex flex-col justify-between h-full">
+      {/* Top Row: Icon & Trend Badge */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className={`w-10 h-10 lg:w-11 lg:h-11 ${stat.color} rounded-xl flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform flex-shrink-0`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
-        {/* <div className={`flex items-center gap-1 text-sm font-semibold ${
-          stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-        }`}>
-          {stat.trend === 'up' ? (
-            <TrendingUp className="w-4 h-4" />
-          ) : (
-            <TrendingDown className="w-4 h-4" />
-          )}
-          {stat.change}
-        </div> */}
+        {stat.change && (
+          <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-bold ${
+            isUp ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+          }`}>
+            {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            {stat.change}
+          </span>
+        )}
       </div>
-      <div className="text-3xl font-bold mb-1">{stat.value}</div>
-      <div className="text-sm text-gray-600">{stat.title}</div>
+
+      {/* Bottom Row: Value & Title */}
+      <div>
+        <div className="text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight mb-1">
+          {stat.value}
+        </div>
+        <div className="text-xs lg:text-sm font-semibold text-gray-500">
+          {stat.title}
+        </div>
+      </div>
     </div>
   );
 };

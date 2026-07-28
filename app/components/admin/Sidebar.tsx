@@ -40,14 +40,29 @@ export default function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-gray-900 to-gray-800 shadow-xl flex flex-col">
-      <div className="p-6 border-b border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#FFC93C] rounded-full flex items-center justify-center font-bold">
-            d
+      <div className="px-6 py-5 border-b border-gray-800/80">
+        <div className="flex items-center gap-3.5">
+          <div className="relative">
+            <div className="w-11 h-11 bg-gradient-to-br from-[#FFC93C] via-amber-400 to-amber-500 rounded-xl flex items-center justify-center text-gray-950 font-black text-2xl shadow-lg shadow-amber-500/25 ring-2 ring-amber-400/30">
+              D
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-gray-900"></span>
+            </span>
           </div>
-          <span className="text-white text-xl font-bold">duezaro</span>
+
+          <div>
+            <h1 className="text-white text-xl font-extrabold tracking-tight">
+              Duezaro
+            </h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="inline-block px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-md uppercase">
+                Admin Panel
+              </span>
+            </div>
+          </div>
         </div>
-        <p className="text-gray-400 text-xs mt-2">Admin Panel</p>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

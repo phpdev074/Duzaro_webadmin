@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User,
   Mail,
@@ -12,6 +12,8 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { GetAdminProfile, UpdateAdminProfile, ChangeAdminPassword } from '@/app/api/ApiHelper/adminProfileHelper';
+import Swal from 'sweetalert2';
 
 export default function Settings() {
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -19,11 +21,13 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Profile State
   const [profileData, setProfileData] = useState({
-    name: 'Admin User',
-    email: 'admin@duezaro.com',
+    name: '',
+    email: '',
+    phone: '',
     role: 'Admin'
   });
 
@@ -34,27 +38,79 @@ export default function Settings() {
     confirmPassword: ''
   });
 
-  const handleProfileUpdate = () => {
-    console.log('Profile Updated:', profileData);
-    setShowEditProfile(false);
+  const fetchProfile = async () => {
+    try {
+      const res = await GetAdminProfile();
+      if (res.data?.data) {
+        const admin = res.data.data;
+        setProfileData({
+          name: admin.name || '',
+          email: admin.email || '',
+          phone: admin.phone || '',
+          role: 'Admin'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching admin profile:', error);
+    }
   };
 
-  const handlePasswordChange = () => {
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handleProfileUpdate = async () => {
+    try {
+      setLoading(true);
+      const res = await UpdateAdminProfile({
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+      });
+      if (res.data?.success || res.status === 200) {
+        Swal.fire('Success', 'Profile updated successfully!', 'success');
+        setShowEditProfile(false);
+        fetchProfile();
+      }
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update profile', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New password and confirm password do not match!');
+      Swal.fire('Error', 'New password and confirm password do not match!', 'error');
       return;
     }
-    console.log('Password Changed');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    setShowChangePassword(false);
+
+    try {
+      setLoading(true);
+      const res = await ChangeAdminPassword({
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      if (res.data?.success || res.status === 200) {
+        Swal.fire('Success', 'Password changed successfully!', 'success');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setShowChangePassword(false);
+      }
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to change password', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 pb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Settings</h1>
@@ -80,7 +136,7 @@ export default function Settings() {
           {/* Profile Picture */}
           <div className="relative">
             <div className="w-32 h-32 bg-gradient-to-br from-[#FFC93C] to-orange-500 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              AM
+              {profileData.name ? profileData.name.slice(0, 2).toUpperCase() : 'AD'}
             </div>
             {showEditProfile && (
               <button className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg">

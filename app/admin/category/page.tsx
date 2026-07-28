@@ -15,6 +15,7 @@ import { IMAGE_BASE_URL } from '@/app/api/api';
 import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
 import Swal from "sweetalert2";
 import { CreateSubService, DeleteSubService, Get_SubServices, UpdateSubService } from '@/app/api/ApiHelper/serviceHelper';
+import { useSearchParams } from 'next/navigation';
 
 interface Category {
   id: string;
@@ -24,8 +25,15 @@ interface Category {
 }
 
 export default function CategoryManagement() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setShowAddModal(true);
+    }
+  }, [searchParams]);
   const [showAddModalSubCategory, setShowAddModalSubCategory] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [subCategoryName, setSubCategoryName] = useState('');
@@ -416,7 +424,7 @@ export default function CategoryManagement() {
   };
 
   return (
-    <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 pb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

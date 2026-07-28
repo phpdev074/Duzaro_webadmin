@@ -1,23 +1,3 @@
-// "use client";
-// import StatsCard from "@/app/components/admin/StatsCard";
-// import DashboardChart from "@/app/components/admin/DashboardChart";
-// import { Users, Briefcase, DollarSign, Calendar } from "lucide-react";
-
-// export default function AdminDashboard() {
-//   return (
-//     <>
-//       <div className="grid grid-cols-4 gap-6 mb-8">
-//         <StatsCard title="Total Users" value="1,248" icon={Users} />
-//         <StatsCard title="Active Services" value="856" icon={Briefcase} />
-//         <StatsCard title="Revenue" value="₹12.4L" icon={DollarSign} />
-//         <StatsCard title="Pending Dues" value="₹2.8L" icon={Calendar} />
-//       </div>
-
-//       <DashboardChart />
-//     </>
-//   );
-// }
-
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Users, Briefcase, DollarSign, Calendar } from 'lucide-react';
@@ -39,7 +19,7 @@ const Dashboard: React.FC = () => {
       change: '+12.5%',
       trend: 'up',
       icon: Users,
-      color: 'bg-blue-500'
+      color: 'bg-gradient-to-br from-blue-500 to-indigo-600'
     },
     {
       title: 'Active Services',
@@ -47,7 +27,7 @@ const Dashboard: React.FC = () => {
       change: '+8.2%',
       trend: 'up',
       icon: Briefcase,
-      color: 'bg-green-500'
+      color: 'bg-gradient-to-br from-emerald-500 to-teal-600'
     },
     {
       title: 'Revenue',
@@ -55,7 +35,7 @@ const Dashboard: React.FC = () => {
       change: '+15.3%',
       trend: 'up',
       icon: DollarSign,
-      color: 'bg-[#FFC93C]'
+      color: 'bg-gradient-to-br from-amber-400 to-amber-500'
     },
     {
       title: 'Pending Dues',
@@ -63,7 +43,7 @@ const Dashboard: React.FC = () => {
       change: '-5.4%',
       trend: 'down',
       icon: Calendar,
-      color: 'bg-red-500'
+      color: 'bg-gradient-to-br from-rose-500 to-pink-600'
     },
   ];
 
@@ -93,19 +73,19 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <>
+    <div className="flex flex-col h-full gap-4 lg:gap-5 justify-between px-4 lg:px-6 py-4 lg:py-5 min-h-0 overflow-hidden">
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 flex-shrink-0">
         {stats.map((stat, index) => (
           <StatsCard key={index} stat={stat} />
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-5 flex-1 min-h-0 items-stretch">
         <UserDistributionChart data={data} loading={loading} />
         <QuickActions />
       </div>
-    </>
+    </div>
   );
 };
 

@@ -52,7 +52,7 @@ export default function ContactUsManagement() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 pb-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Contact Us Messages</h1>
         <p className="text-sm text-gray-600">View all messages received from the Contact Us form.</p>

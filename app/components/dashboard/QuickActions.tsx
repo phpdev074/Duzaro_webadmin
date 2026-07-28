@@ -1,23 +1,30 @@
 import React from 'react';
 import { Briefcase, FolderOpen } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const QuickActions: React.FC = () => {
+  const router = useRouter();
+
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm">
-      <h2 className="font-bold text-lg mb-6">Quick Actions</h2>
+    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3.5 lg:p-4 border border-gray-100 shadow-2xs h-full flex flex-col justify-start">
+      <h2 className="font-bold text-sm lg:text-base text-gray-900 mb-3">Quick Actions</h2>
       
-      <div className="space-y-3">
-        <button className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          <Briefcase className="w-4 h-4" />
+      <div className="space-y-2.5">
+        <button
+          onClick={() => router.push('/admin/services?action=add')}
+          className="w-full bg-white hover:bg-amber-50/60 border border-gray-200 hover:border-[#FFC93C] text-gray-800 font-semibold py-2 px-3.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-2xs group"
+        >
+          <Briefcase className="w-3.5 h-3.5 text-gray-600 group-hover:text-black transition-colors" />
           Add Service
         </button>
-        <button className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          <FolderOpen className="w-4 h-4" />
+        <button
+          onClick={() => router.push('/admin/category?action=add')}
+          className="w-full bg-white hover:bg-amber-50/60 border border-gray-200 hover:border-[#FFC93C] text-gray-800 font-semibold py-2 px-3.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-2xs group"
+        >
+          <FolderOpen className="w-3.5 h-3.5 text-gray-600 group-hover:text-black transition-colors" />
           New Category
         </button>
       </div>
-
-
     </div>
   );
 };

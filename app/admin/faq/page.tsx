@@ -132,7 +132,7 @@ export default function FaqManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 pb-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">FAQ Management</h1>

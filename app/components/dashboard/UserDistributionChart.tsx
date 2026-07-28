@@ -10,12 +10,12 @@ interface Props {
 const UserDistributionChart: React.FC<Props> = ({ data, loading }) => {
 
   return (
-    <div className="col-span-2 bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-bold text-lg">User Distribution</h2>
+    <div className="lg:col-span-2 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 lg:p-4 border border-gray-100 shadow-2xs flex flex-col justify-between h-full">
+      <div className="flex items-center justify-between mb-1.5">
+        <h2 className="font-bold text-sm lg:text-base text-gray-900">User Distribution</h2>
       </div>
 
-      <div className="h-80 flex items-center justify-center">
+      <div className="w-full flex-1 min-h-[180px] max-h-[260px] flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -27,7 +27,7 @@ const UserDistributionChart: React.FC<Props> = ({ data, loading }) => {
                 if (!percent || percent === 0) return null;
                 return `${name}: ${(percent * 100).toFixed(0)}%`;
               }}
-              outerRadius={100}
+              outerRadius={75}
               fill="#8884d8"
               dataKey="value"
             >
@@ -42,30 +42,19 @@ const UserDistributionChart: React.FC<Props> = ({ data, loading }) => {
       </div>
 
       {!loading && (
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+        <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-gray-200">
           {data.map((item, index) => (
             <div key={index} className="text-center">
               <div
-                className="w-3 h-3 rounded-full mx-auto mb-2"
+                className="w-2.5 h-2.5 rounded-full mx-auto mb-1"
                 style={{ backgroundColor: item.color }}
               />
-              <div className="font-bold text-lg">{item.value}</div>
+              <div className="font-bold text-base lg:text-lg">{item.value}</div>
               <div className="text-xs text-gray-600">{item.name}</div>
             </div>
           ))}
         </div>
       )}
-
-      {/* Stats Summary */}
-      {/* <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
-        {data.map((item, index) => (
-          <div key={index} className="text-center">
-            <div className="w-3 h-3 rounded-full mx-auto mb-2" style={{ backgroundColor: item.color }}></div>
-            <div className="font-bold text-lg">{item.value}</div>
-            <div className="text-xs text-gray-600">{item.name}</div>
-          </div>
-        ))}
-      </div> */}
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { IMAGE_BASE_URL } from '@/app/api/api';
 import { CreateCategory, DeleteCategory, UpdateCategory } from '@/app/api/ApiHelper/categoryHelper';
 import Swal from "sweetalert2";
 import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+import { useSearchParams } from 'next/navigation';
 
 interface Service {
   id: string;
@@ -30,8 +31,16 @@ interface SubService {
 }
 
 export default function ServiceManagement() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'services' | 'sub-services'>('services');
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add') {
+      setShowAddServiceModal(true);
+    }
+  }, [searchParams]);
+
   const [showAddSubServiceModal, setShowAddSubServiceModal] = useState(false);
   const [serviceName, setServiceName] = useState('');
   const [serviceImage, setServiceImage] = useState<File | null>(null);
@@ -483,7 +492,7 @@ export default function ServiceManagement() {
   };
 
   return (
-    <div className="p-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div className="flex-1 overflow-y-auto min-h-0 p-4 lg:p-6 pb-8" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

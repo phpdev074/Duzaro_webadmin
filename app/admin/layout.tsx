@@ -8,11 +8,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="!text-black min-h-screen flex bg-gradient-to-br from-gray-100 to-green-50">
+    <div className="!text-black h-screen h-dvh flex overflow-hidden bg-gradient-to-br from-gray-100 to-green-50">
       <Sidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 ml-64 flex flex-col h-full overflow-hidden">
         <TopHeader />
-        <main className="p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          {children}
+        </main>
       </div>
     </div>
   );
