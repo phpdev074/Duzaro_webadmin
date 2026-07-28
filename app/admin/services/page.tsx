@@ -13,7 +13,7 @@ import {
 import { CreateSubService, DeleteSubService, Get_SubServices, GetServices, UpdateSubService } from '@/app/api/ApiHelper/serviceHelper';
 import { IMAGE_BASE_URL } from '@/app/api/api';
 import { CreateCategory, DeleteCategory, UpdateCategory } from '@/app/api/ApiHelper/categoryHelper';
-import Swal from "sweetalert2";
+import CustomConfirmModal, { ConfirmModalState } from '@/app/components/common/CustomConfirmModal';
 import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
 import { useSearchParams } from 'next/navigation';
 
@@ -71,7 +71,12 @@ export default function ServiceManagement() {
   const [isServiceSubmitting, setIsServiceSubmitting] = useState(false);
   const [isSubServiceSubmitting, setIsSubServiceSubmitting] = useState(false);
 
-  const limit = 1000;
+  const [limit] = useState(12);
+  const [subServicePage, setSubServicePage] = useState(1);
+  const [subServiceLimit] = useState(10);
+  const [totalServices, setTotalServices] = useState(0);
+  const [totalSubServices, setTotalSubServices] = useState(0);
+  const [subServiceTotalPages, setSubServiceTotalPages] = useState(1);
 
   // const services: Service[] = [
   //   {
@@ -230,10 +235,15 @@ export default function ServiceManagement() {
         err?.response?.data?.message ||
         "Something went wrong. Please try again.";
 
-      Swal.fire({
-        icon: "error",
+      setConfirmModal({
+        isOpen: true,
         title: "Error",
-        text: errorMessage,
+        message: errorMessage,
+        confirmText: "OK",
+        cancelText: "",
+        confirmVariant: "danger",
+        onConfirm: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
       });
     } finally {
       setIsSubServiceSubmitting(false);
@@ -264,14 +274,16 @@ export default function ServiceManagement() {
 
   const GetUsersData = async () => {
     setIsLoading(true);
-    // setUsers([]);
     try {
       const respo = await GetServices({ search: debouncedServiceSearch, page, limit });
-      console.log(respo.data.data)
-      setServices(respo.data.data || []);
-      setTotalPages(respo.data.pagination.totalPages || 1);
+      const resData = respo.data || {};
+      const list = resData.data || [];
+      const pagination = resData.pagination || {};
+      setServices(list);
+      setTotalServices(Number(pagination.total ?? list.length));
+      setTotalPages(Number(pagination.totalPages || (list.length > 0 ? Math.ceil((pagination.total || list.length) / limit) : 1)));
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -279,13 +291,13 @@ export default function ServiceManagement() {
 
   useEffect(() => {
     GetUsersData();
-  }, [debouncedServiceSearch, page])
+  }, [debouncedServiceSearch, page]);
 
   useEffect(() => {
     if (activeTab === "sub-services") {
       fetchSubServices();
     }
-  }, [activeTab, debouncedSubServiceSearch]);
+  }, [activeTab, debouncedSubServiceSearch, subServicePage]);
 
   useEffect(() => {
     if (showAddSubServiceModal) {
@@ -296,10 +308,17 @@ export default function ServiceManagement() {
   const fetchSubServices = async () => {
     try {
       const res = await Get_SubServices({
-        search: debouncedSubServiceSearch, services: 'services'
+        search: debouncedSubServiceSearch,
+        services: 'services',
+        page: subServicePage,
+        limit: subServiceLimit
       });
-
-      setSubServices(res.data?.data || []);
+      const resData = res.data || {};
+      const list = resData.data || [];
+      const pagination = resData.pagination || {};
+      setSubServices(list);
+      setTotalSubServices(Number(pagination.total ?? list.length));
+      setSubServiceTotalPages(Number(pagination.totalPages || (list.length > 0 ? Math.ceil((pagination.total || list.length) / subServiceLimit) : 1)));
     } catch (err) {
       console.error("Fetch sub-services error", err);
     }
@@ -315,42 +334,32 @@ export default function ServiceManagement() {
     }
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    const result = await Swal.fire({
-      title: "Delete Category?",
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it",
-      cancelButtonText: "Cancel",
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setOpenMenuId(null);
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Service",
+      message: "Are you sure you want to delete this service? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await DeleteCategory(categoryId);
+          GetUsersData();
+        } catch (error) {
+          console.error("Delete category error:", error);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
     });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await DeleteCategory(categoryId);
-
-      Swal.fire({
-        title: "Deleted!",
-        text: "Category has been deleted successfully.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      setOpenMenuId(null);
-      GetUsersData();
-    } catch (error) {
-      console.error("Delete category error:", error);
-
-      Swal.fire({
-        title: "Error",
-        text: "Failed to delete category.",
-        icon: "error",
-      });
-    }
   };
 
   const handleSubmit = async () => {
@@ -442,42 +451,26 @@ export default function ServiceManagement() {
     setOpenMenuId(null);
   };
 
-  const handleDeleteSubService = async (subServiceId: string) => {
-    const result = await Swal.fire({
-      title: "Delete Sub-Service?",
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it",
-      cancelButtonText: "Cancel",
+  const handleDeleteSubService = (subServiceId: string) => {
+    setOpenMenuId(null);
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Sub-Service",
+      message: "Are you sure you want to delete this sub-service? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await DeleteSubService(subServiceId);
+          fetchSubServices();
+        } catch (error) {
+          console.error("Delete sub-service error:", error);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
     });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await DeleteSubService(subServiceId);
-
-      Swal.fire({
-        title: "Deleted!",
-        text: "Sub-service deleted successfully.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      setOpenMenuId(null);
-      fetchSubServices(); // 🔥 refresh sub-services list
-    } catch (error) {
-      console.error("Delete sub-service error:", error);
-
-      Swal.fire({
-        title: "Error",
-        text: "Failed to delete sub-service.",
-        icon: "error",
-      });
-    }
   };
 
   const handleEditSubService = (subService: any) => {
@@ -511,37 +504,34 @@ export default function ServiceManagement() {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-4 mb-6 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('services')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'services'
-            ? 'text-black'
-            : 'text-gray-500 hover:text-gray-700'
+      {/* Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Segmented Pill Tabs */}
+        <div className="inline-flex bg-gray-200/70 p-1 rounded-xl shadow-inner">
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`px-5 py-2 font-bold text-xs lg:text-sm rounded-lg transition-all ${
+              activeTab === 'services'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
             }`}
-        >
-          Services
-          {activeTab === 'services' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFC93C]"></div>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('sub-services')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'sub-services'
-            ? 'text-black'
-            : 'text-gray-500 hover:text-gray-700'
+          >
+            Services
+          </button>
+          <button
+            onClick={() => setActiveTab('sub-services')}
+            className={`px-5 py-2 font-bold text-xs lg:text-sm rounded-lg transition-all ${
+              activeTab === 'sub-services'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
             }`}
-        >
-          Sub-Services
-          {activeTab === 'sub-services' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFC93C]"></div>
-          )}
-        </button>
-      </div>
+          >
+            Sub-Services
+          </button>
+        </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1">
+        {/* Compact Search Bar */}
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -552,27 +542,26 @@ export default function ServiceManagement() {
                 : setSubServiceSearch(e.target.value)
             }
             placeholder={`Search ${activeTab === 'services' ? 'services' : 'sub-services'}...`}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs lg:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C] shadow-sm"
           />
         </div>
       </div>
 
       {/* Services Tab Content */}
       {activeTab === 'services' && (
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.length === 0 ? (
             <div className="col-span-4 flex flex-col items-center justify-center py-20 text-gray-500">
               <ImageIcon className="w-12 h-12 mb-3" />
               <p className="text-lg font-semibold">No services found</p>
-              {/* <p className="text-sm">Try changing your search</p> */}
             </div>
           ) : (services.map((service) => (
             <div
               key={service.id}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
+              className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-100 relative group"
             >
               {/* Three Dot Menu */}
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 z-10">
                 <button
                   onClick={() => handleMenuClick(service.id)}
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
@@ -612,23 +601,27 @@ export default function ServiceManagement() {
               </div>
 
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 text-4xl">
-                  {service.image ? (
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center mb-4 border border-gray-100 shadow-inner">
+                  {service.image && (service.image.startsWith('http') || service.image.includes('/')) ? (
                     <img
                       src={
                         service.image.startsWith('http')
                           ? service.image
                           : `${IMAGE_BASE_URL}${service.image}`
                       }
-                      alt={service.name}
+                      alt=""
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   ) : (
                     <ImageIcon className="w-10 h-10 text-gray-400" />
                   )}
                 </div>
-                <h3 className="font-bold text-lg mb-2">{service.name}</h3>
-                {/* <p className="text-sm text-gray-600">{service.subServicesCount} Sub-Services</p> */}
+                <h3 className="font-bold text-base lg:text-lg mb-1 truncate w-full text-gray-900" title={service.name}>
+                  {service.name}
+                </h3>
               </div>
             </div>
           ))
@@ -638,21 +631,20 @@ export default function ServiceManagement() {
 
       {/* Sub-Services Tab Content */}
       {activeTab === 'sub-services' && (
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {subServices.length === 0 ? (
             /* 🔴 EMPTY STATE */
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
               <ImageIcon className="w-12 h-12 mb-3" />
               <p className="text-lg font-semibold">No sub-services found</p>
-              {/* <p className="text-sm">Try changing your search</p> */}
             </div>
           ) : (
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">S.No</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Name</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Service Name</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Sub-Service Name</th>
                   <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
@@ -662,59 +654,113 @@ export default function ServiceManagement() {
                     key={subService.id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-sm">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      {subService.category.name}
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">
+                      {(subServicePage - 1) * subServiceLimit + index + 1}
                     </td>
-                    <td className="px-6 py-4 text-sm">{subService.name}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                      {subService.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {subService.category?.name || 'N/A'}
+                    </td>
 
                     <td className="px-6 py-4 text-right">
-                      <div className="relative inline-block">
+                      <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => handleMenuClick(`sub-${subService.id}`)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200"
+                          onClick={() => handleEditSubService(subService)}
+                          className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-black transition-colors"
+                          title="Edit"
                         >
-                          <MoreVertical className="w-5 h-5 text-gray-600" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
-
-                        {openMenuId === `sub-${subService.id}` && (
-                          <>
-                            {/* 🔴 CLICK ANYWHERE TO CLOSE */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border py-2 z-20">
-                              {/* ✅ EDIT */}
-                              <button
-                                onClick={() => handleEditSubService(subService)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                              >
-                                <Edit2 className="w-4 h-4 text-gray-600" />
-                                <span className="text-sm font-medium text-gray-700">Edit</span>
-                              </button>
-
-                              {/* DELETE */}
-                              <button
-                                onClick={() => handleDeleteSubService(subService.id)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-600" />
-                                <span className="text-sm font-medium text-red-600">Delete</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
+                        <button
+                          onClick={() => handleDeleteSubService(subService.id)}
+                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
-
               </tbody>
             </table>
           )}
         </div>
       )}
+
+      {/* Pagination Footer */}
+      <div className="mt-6 bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-xs lg:text-sm text-gray-600">
+          Showing{' '}
+          <span className="font-semibold">
+            {activeTab === 'services'
+              ? services.length > 0
+                ? (page - 1) * limit + 1
+                : 0
+              : subServices.length > 0
+              ? (subServicePage - 1) * subServiceLimit + 1
+              : 0}
+          </span>{' '}
+          to{' '}
+          <span className="font-semibold">
+            {activeTab === 'services'
+              ? Math.min(page * limit, totalServices || services.length)
+              : Math.min(subServicePage * subServiceLimit, totalSubServices || subServices.length)}
+          </span>{' '}
+          of{' '}
+          <span className="font-semibold">
+            {activeTab === 'services'
+              ? totalServices || services.length
+              : totalSubServices || subServices.length}
+          </span>{' '}
+          {activeTab === 'services' ? 'services' : 'sub-services'}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            disabled={activeTab === 'services' ? page <= 1 : subServicePage <= 1}
+            onClick={() =>
+              activeTab === 'services'
+                ? setPage((p) => Math.max(p - 1, 1))
+                : setSubServicePage((p) => Math.max(p - 1, 1))
+            }
+            className={`px-4 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all shadow-sm ${
+              (activeTab === 'services' ? page <= 1 : subServicePage <= 1)
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Previous
+          </button>
+
+          <span className="text-xs lg:text-sm text-gray-600 font-semibold px-2">
+            Page {activeTab === 'services' ? page : subServicePage} of{' '}
+            {activeTab === 'services' ? totalPages : subServiceTotalPages}
+          </span>
+
+          <button
+            disabled={
+              activeTab === 'services'
+                ? page >= totalPages
+                : subServicePage >= subServiceTotalPages
+            }
+            onClick={() =>
+              activeTab === 'services'
+                ? setPage((p) => Math.min(p + 1, totalPages))
+                : setSubServicePage((p) => Math.min(p + 1, subServiceTotalPages))
+            }
+            className={`px-4 py-2 rounded-xl text-xs lg:text-sm font-semibold transition-all shadow-sm ${
+              (activeTab === 'services' ? page >= totalPages : subServicePage >= subServiceTotalPages)
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                : 'bg-black text-white hover:bg-gray-800'
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Add Service Modal */}
       {showAddServiceModal && (
@@ -893,6 +939,8 @@ export default function ServiceManagement() {
           </div>
         </div>
       )}
+
+      <CustomConfirmModal {...confirmModal} />
     </div>
   );
 }

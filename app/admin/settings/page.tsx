@@ -13,7 +13,9 @@ import {
   X
 } from 'lucide-react';
 import { GetAdminProfile, UpdateAdminProfile, ChangeAdminPassword } from '@/app/api/ApiHelper/adminProfileHelper';
-import Swal from 'sweetalert2';
+import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
+import { IMAGE_BASE_URL } from '@/app/api/api';
+import CustomConfirmModal, { ConfirmModalState } from '@/app/components/common/CustomConfirmModal';
 
 export default function Settings() {
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -28,8 +30,12 @@ export default function Settings() {
     name: '',
     email: '',
     phone: '',
+    image: '',
     role: 'Admin'
   });
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // Password State
   const [passwordData, setPasswordData] = useState({
@@ -47,6 +53,7 @@ export default function Settings() {
           name: admin.name || '',
           email: admin.email || '',
           phone: admin.phone || '',
+          image: admin.image || '',
           role: 'Admin'
         });
       }
@@ -59,30 +66,85 @@ export default function Settings() {
     fetchProfile();
   }, []);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const showAlert = (title: string, message: string, variant: "danger" | "warning" | "primary" | "success" = "primary") => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText: "OK",
+      cancelText: "",
+      confirmVariant: variant,
+      onConfirm: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
+    });
+  };
+
   const handleProfileUpdate = async () => {
     try {
       setLoading(true);
+      let uploadedImageUrl = profileData.image;
+
+      if (imageFile) {
+        const uploadRes = await UploadProviderLogo(imageFile);
+        if (uploadRes.data?.filePath) {
+          uploadedImageUrl = uploadRes.data.filePath;
+        }
+      }
+
       const res = await UpdateAdminProfile({
         name: profileData.name,
         email: profileData.email,
         phone: profileData.phone,
+        image: uploadedImageUrl,
       });
+
       if (res.data?.success || res.status === 200) {
-        Swal.fire('Success', 'Profile updated successfully!', 'success');
+        showAlert('Success', 'Profile updated successfully!', 'primary');
         setShowEditProfile(false);
+        setImageFile(null);
+        setImagePreview(null);
         fetchProfile();
       }
     } catch (error: any) {
       console.error('Profile update error:', error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to update profile', 'error');
+      showAlert('Error', error.response?.data?.message || 'Failed to update profile', 'danger');
     } finally {
       setLoading(false);
     }
   };
 
   const handlePasswordChange = async () => {
+    if (!passwordData.currentPassword.trim()) {
+      showAlert('Error', 'Please enter your current password.', 'danger');
+      return;
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      showAlert('Error', 'Please enter a new password.', 'danger');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      showAlert('Error', 'New password must be at least 6 characters long.', 'danger');
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      Swal.fire('Error', 'New password and confirm password do not match!', 'error');
+      showAlert('Error', 'New password and confirm password do not match!', 'danger');
       return;
     }
 
@@ -92,18 +154,24 @@ export default function Settings() {
         oldPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      if (res.data?.success || res.status === 200) {
-        Swal.fire('Success', 'Password changed successfully!', 'success');
+
+      if (res.status === 200 || res.status === 201 || res.data?.success) {
+        showAlert('Success', res.data?.message || 'Password changed successfully!', 'primary');
         setPasswordData({
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
         setShowChangePassword(false);
+      } else {
+        const backendMsg = Array.isArray(res.data?.message)
+          ? res.data.message.join(", ")
+          : (res.data?.message || 'Old password is incorrect');
+        showAlert('Error', backendMsg, 'danger');
       }
     } catch (error: any) {
       console.error('Password change error:', error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to change password', 'error');
+      showAlert('Error', 'Failed to change password.', 'danger');
     } finally {
       setLoading(false);
     }
@@ -135,13 +203,32 @@ export default function Settings() {
         <div className="flex items-start gap-6">
           {/* Profile Picture */}
           <div className="relative">
-            <div className="w-32 h-32 bg-gradient-to-br from-[#FFC93C] to-orange-500 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              {profileData.name ? profileData.name.slice(0, 2).toUpperCase() : 'AD'}
+            <div className="w-32 h-32 bg-gradient-to-br from-[#FFC93C] to-orange-500 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg overflow-hidden border-2 border-white">
+              {imagePreview || profileData.image ? (
+                <img
+                  src={
+                    imagePreview ||
+                    (profileData.image.startsWith('http')
+                      ? profileData.image
+                      : `${IMAGE_BASE_URL}${profileData.image}`)
+                  }
+                  alt={profileData.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profileData.name ? profileData.name.slice(0, 2).toUpperCase() : 'AD'
+              )}
             </div>
             {showEditProfile && (
-              <button className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg">
+              <label className="absolute bottom-0 right-0 w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg cursor-pointer">
                 <Camera className="w-5 h-5" />
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </label>
             )}
           </div>
 
@@ -338,6 +425,8 @@ export default function Settings() {
           </div>
         )}
       </div>
+
+      <CustomConfirmModal {...confirmModal} />
     </div>
   );
 }

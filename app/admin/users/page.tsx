@@ -16,7 +16,7 @@ import {
 import { GetUserList, BlockUser, UnblockUser, ToggleBlockUser, DeleteUser } from '@/app/api/ApiHelper/userHelper';
 import { IMAGE_BASE_URL } from '@/app/api/api';
 import { createPortal } from 'react-dom';
-import Swal from 'sweetalert2';
+import CustomConfirmModal, { ConfirmModalState } from '@/app/components/common/CustomConfirmModal';
 
 interface User {
   fullName: any;
@@ -166,32 +166,34 @@ export default function UserManagement() {
     }
   };
 
-  const handleDeleteUser = async (user: User) => {
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const handleDeleteUser = (user: User) => {
     setOpenMenuId(null);
-
-    const result = await Swal.fire({
-      title: "Delete User?",
-      text: `Are you sure you want to delete ${user.fullName || "this user"}? You can recover or restore this user later.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete",
-      cancelButtonText: "Cancel",
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete User",
+      message: `Are you sure you want to delete ${user.fullName || "this user"}? You can recover or restore this user later.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const res = await DeleteUser(user.id);
+          if (res.data?.success || res.status === 200) {
+            GetUsersData();
+          }
+        } catch (error) {
+          console.error("Error deleting user:", error);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
     });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      const res = await DeleteUser(user.id);
-      if (res.data?.success || res.status === 200) {
-        Swal.fire("Deleted!", "User has been deleted.", "success");
-        GetUsersData();
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      Swal.fire("Error!", "Failed to delete user.", "error");
-    }
   };
 
   const [menuPosition, setMenuPosition] = useState<{
@@ -492,6 +494,8 @@ export default function UserManagement() {
 
         </div>
       </div>
+
+      <CustomConfirmModal {...confirmModal} />
     </div>
   );
 }
