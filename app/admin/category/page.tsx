@@ -13,7 +13,7 @@ import {
 import { CreateCategory, DeleteCategory, GetCategory, UpdateCategory } from '@/app/api/ApiHelper/categoryHelper';
 import { IMAGE_BASE_URL } from '@/app/api/api';
 import { UploadProviderLogo } from '@/app/api/ApiHelper/uploadHelper';
-import Swal from "sweetalert2";
+import CustomConfirmModal, { ConfirmModalState } from '@/app/components/common/CustomConfirmModal';
 import { CreateSubService, DeleteSubService, Get_SubServices, UpdateSubService } from '@/app/api/ApiHelper/serviceHelper';
 import { useSearchParams } from 'next/navigation';
 
@@ -43,6 +43,7 @@ export default function CategoryManagement() {
   const [users, setUsers] = useState([]);
   const [categories, setCategories] = useState<any[]>([])
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
@@ -59,77 +60,33 @@ export default function CategoryManagement() {
   const [isEditSubService, setIsEditSubService] = useState(false);
   const [selectedSubService, setSelectedSubService] = useState<any>(null);
   const [page, setPage] = useState(1);
+  const [subCategoryPage, setSubCategoryPage] = useState(1);
+  const [subCategoryTotalPages, setSubCategoryTotalPages] = useState(1);
+  const [subCategoryTotalItems, setSubCategoryTotalItems] = useState(0);
 
-  const limit = 1000;
-
-  // const categories: Category[] = [
-  //   {
-  //     id: '1',
-  //     name: 'Electricity',
-  //     image: '⚡',
-  //     servicesCount: 24
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'Water',
-  //     image: '💧',
-  //     servicesCount: 18
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Gas',
-  //     image: '🔥',
-  //     servicesCount: 15
-  //   },
-  //   {
-  //     id: '4',
-  //     name: 'Insurance',
-  //     image: '🛡️',
-  //     servicesCount: 32
-  //   },
-  //   {
-  //     id: '5',
-  //     name: 'Telecom',
-  //     image: '📱',
-  //     servicesCount: 28
-  //   },
-  //   {
-  //     id: '6',
-  //     name: 'Internet',
-  //     image: '🌐',
-  //     servicesCount: 21
-  //   },
-  //   {
-  //     id: '7',
-  //     name: 'DTH/Cable',
-  //     image: '📺',
-  //     servicesCount: 16
-  //   },
-  //   {
-  //     id: '8',
-  //     name: 'Loan EMI',
-  //     image: '💰',
-  //     servicesCount: 42
-  //   },
-  // ];
+  const limit = 12;
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setPage(1);
-      // setBlockedPage(1);
     }, 500);
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
   const GetUsersData = async () => {
     setIsLoading(true);
-    // setUsers([]);
     try {
       const respo = await GetCategory({ search: debouncedSearch, page, limit });
-
       setCategories(respo.data.data || []);
-      setTotalPages(respo.data.pagination.totalPages || 1);
+      if (respo.data?.pagination) {
+        setTotalPages(respo.data.pagination.totalPages || 1);
+        setTotalItems(respo.data.pagination.total || 0);
+      } else {
+        const count = respo.data?.data?.length || 0;
+        setTotalPages(Math.max(1, Math.ceil(count / limit)));
+        setTotalItems(count);
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -139,13 +96,12 @@ export default function CategoryManagement() {
 
   useEffect(() => {
     GetUsersData();
-  }, [debouncedSearch, page])
+  }, [debouncedSearch, page]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSubCategorySearch(subCategorySearch);
-      setPage(1);
-      // setBlockedPage(1);
+      setSubCategoryPage(1);
     }, 500);
     return () => clearTimeout(handler);
   }, [subCategorySearch]);
@@ -155,12 +111,18 @@ export default function CategoryManagement() {
       const res = await Get_SubServices({
         search: debouncedSubCategorySearch,
         services: 'category',
-        page,
+        page: subCategoryPage,
         limit,
       });
-      console.log(res.data.data)
       setSubCategory(res.data?.data || []);
-      // setTotalPages(res.data.pagination.totalPages || 1);
+      if (res.data?.pagination) {
+        setSubCategoryTotalPages(res.data.pagination.totalPages || 1);
+        setSubCategoryTotalItems(res.data.pagination.total || 0);
+      } else {
+        const count = res.data?.data?.length || 0;
+        setSubCategoryTotalPages(Math.max(1, Math.ceil(count / limit)));
+        setSubCategoryTotalItems(count);
+      }
     } catch (err) {
       console.error("Fetch sub-services error", err);
     }
@@ -170,7 +132,7 @@ export default function CategoryManagement() {
     if (activeTab === "sub-category") {
       fetchSubServices();
     }
-  }, [activeTab, debouncedSubCategorySearch]);
+  }, [activeTab, debouncedSubCategorySearch, subCategoryPage]);
 
   useEffect(() => {
     if (showAddModalSubCategory) {
@@ -238,42 +200,32 @@ export default function CategoryManagement() {
     setOpenMenuId(openMenuId === categoryId ? null : categoryId);
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    const result = await Swal.fire({
-      title: "Delete Category?",
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it",
-      cancelButtonText: "Cancel",
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setOpenMenuId(null);
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Category",
+      message: "Are you sure you want to delete this category? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await DeleteCategory(categoryId);
+          GetUsersData();
+        } catch (error) {
+          console.error("Delete category error:", error);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
     });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await DeleteCategory(categoryId);
-
-      Swal.fire({
-        title: "Deleted!",
-        text: "Category has been deleted successfully.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      setOpenMenuId(null);
-      GetUsersData();
-    } catch (error) {
-      console.error("Delete category error:", error);
-
-      Swal.fire({
-        title: "Error",
-        text: "Failed to delete category.",
-        icon: "error",
-      });
-    }
   };
 
   const handleEditCategory = (category: any) => {
@@ -364,10 +316,15 @@ export default function CategoryManagement() {
         err?.response?.data?.message ||
         "Something went wrong. Please try again.";
 
-      Swal.fire({
-        icon: "error",
+      setConfirmModal({
+        isOpen: true,
         title: "Error",
-        text: errorMessage,
+        message: errorMessage,
+        confirmText: "OK",
+        cancelText: "",
+        confirmVariant: "danger",
+        onConfirm: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
+        onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
       });
     } finally {
       setIsSubServiceSubmitting(false);
@@ -385,42 +342,26 @@ export default function CategoryManagement() {
     setOpenMenuId(null);
   };
 
-  const handleDeleteSubService = async (subServiceId: string) => {
-    const result = await Swal.fire({
-      title: "Delete Sub-Category?",
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Yes, delete it",
-      cancelButtonText: "Cancel",
+  const handleDeleteSubService = (subServiceId: string) => {
+    setOpenMenuId(null);
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Sub-Category",
+      message: "Are you sure you want to delete this sub-category? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmVariant: "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          await DeleteSubService(subServiceId);
+          fetchSubServices();
+        } catch (error) {
+          console.error("Delete sub-category error:", error);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
     });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      await DeleteSubService(subServiceId);
-
-      Swal.fire({
-        title: "Deleted!",
-        text: "Sub-category deleted successfully.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      setOpenMenuId(null);
-      fetchSubServices(); // 🔥 refresh sub-services list
-    } catch (error) {
-      console.error("Delete sub-category error:", error);
-
-      Swal.fire({
-        title: "Error",
-        text: "Failed to delete sub-category.",
-        icon: "error",
-      });
-    }
   };
 
   return (
@@ -450,36 +391,34 @@ export default function CategoryManagement() {
         </button>
       </div>
 
-      <div className="flex items-center gap-4 mb-6 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('category')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'category'
-            ? 'text-black'
-            : 'text-gray-500 hover:text-gray-700'
+      {/* Tabs & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Segmented Pill Tabs */}
+        <div className="inline-flex bg-gray-200/70 p-1 rounded-xl shadow-inner">
+          <button
+            onClick={() => setActiveTab('category')}
+            className={`px-5 py-2 font-bold text-xs lg:text-sm rounded-lg transition-all ${
+              activeTab === 'category'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
             }`}
-        >
-          Category
-          {activeTab === 'category' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFC93C]"></div>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('sub-category')}
-          className={`px-4 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'sub-category'
-            ? 'text-black'
-            : 'text-gray-500 hover:text-gray-700'
+          >
+            Category
+          </button>
+          <button
+            onClick={() => setActiveTab('sub-category')}
+            className={`px-5 py-2 font-bold text-xs lg:text-sm rounded-lg transition-all ${
+              activeTab === 'sub-category'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-gray-600 hover:text-black'
             }`}
-        >
-          Sub-Category
-          {activeTab === 'sub-category' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFC93C]"></div>
-          )}
-        </button>
-      </div>
+          >
+            Sub-Category
+          </button>
+        </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1">
+        {/* Compact Search Bar */}
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -490,7 +429,7 @@ export default function CategoryManagement() {
                 : setSubCategorySearch(e.target.value)
             }
             placeholder={`Search ${activeTab === 'category' ? 'categories' : 'sub-categories'}...`}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C]"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs lg:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC93C] shadow-sm"
           />
         </div>
       </div>
@@ -596,8 +535,8 @@ export default function CategoryManagement() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">S.No</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Name</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Category Name</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Sub-Category Name</th>
                   <th className="text-right px-6 py-4 text-sm font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
@@ -607,52 +546,32 @@ export default function CategoryManagement() {
                     key={subCategory.id}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 text-sm">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      {subCategory.category.name}
+                    <td className="px-6 py-4 text-sm font-medium text-gray-500">
+                      {(subCategoryPage - 1) * limit + index + 1}
                     </td>
-                    <td className="px-6 py-4 text-sm">{subCategory.name}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900">
+                      {subCategory.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {subCategory.category?.name || 'N/A'}
+                    </td>
 
                     <td className="px-6 py-4 text-right">
-                      <div className="relative inline-block">
+                      <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMenuClick(`sub-${subCategory.id}`);
-                          }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200"
+                          onClick={() => handleEditSubService(subCategory)}
+                          className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-black transition-colors"
+                          title="Edit"
                         >
-                          <MoreVertical className="w-5 h-5 text-gray-600" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
-
-                        {openMenuId === `sub-${subCategory.id}` && (
-                          <>
-                            {/* 🔴 CLICK ANYWHERE TO CLOSE */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setOpenMenuId(null)}
-                            />
-                            <div className="absolute right-0 top-10 w-40 bg-white rounded-xl shadow-lg border py-2 z-20">
-                              {/* ✅ EDIT */}
-                              <button
-                                onClick={() => handleEditSubService(subCategory)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                              >
-                                <Edit2 className="w-4 h-4 text-gray-600" />
-                                <span className="text-sm font-medium text-gray-700">Edit</span>
-                              </button>
-
-                              {/* DELETE */}
-                              <button
-                                onClick={() => handleDeleteSubService(subCategory.id)}
-                                className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50"
-                              >
-                                <Trash2 className="w-4 h-4 text-red-600" />
-                                <span className="text-sm font-medium text-red-600">Delete</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
+                        <button
+                          onClick={() => handleDeleteSubService(subCategory.id)}
+                          className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -661,6 +580,41 @@ export default function CategoryManagement() {
               </tbody>
             </table>
           )}
+        </div>
+      )}
+
+      {/* Pagination Footer */}
+      {((activeTab === 'category' && categories.length > 0) || (activeTab === 'sub-category' && subCategory.length > 0)) && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+          <p className="text-xs lg:text-sm text-gray-600">
+            {activeTab === 'category' ? (
+              <>Showing {totalItems > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, totalItems)} of {totalItems} categories</>
+            ) : (
+              <>Showing {subCategoryTotalItems > 0 ? (subCategoryPage - 1) * limit + 1 : 0} - {Math.min(subCategoryPage * limit, subCategoryTotalItems)} of {subCategoryTotalItems} sub-categories</>
+            )}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => activeTab === 'category' ? setPage(p => Math.max(1, p - 1)) : setSubCategoryPage(p => Math.max(1, p - 1))}
+              disabled={activeTab === 'category' ? page <= 1 : subCategoryPage <= 1}
+              className="px-3 py-1.5 border border-gray-300 rounded-xl text-xs font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+
+            <span className="px-3 py-1.5 bg-[#FFC93C]/20 text-black text-xs font-semibold rounded-xl">
+              Page {activeTab === 'category' ? page : subCategoryPage} of {activeTab === 'category' ? totalPages : subCategoryTotalPages}
+            </span>
+
+            <button
+              onClick={() => activeTab === 'category' ? setPage(p => Math.min(totalPages, p + 1)) : setSubCategoryPage(p => Math.min(subCategoryTotalPages, p + 1))}
+              disabled={activeTab === 'category' ? page >= totalPages : subCategoryPage >= subCategoryTotalPages}
+              className="px-3 py-1.5 border border-gray-300 rounded-xl text-xs font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
@@ -845,6 +799,8 @@ export default function CategoryManagement() {
           </div>
         </div>
       )}
+
+      <CustomConfirmModal {...confirmModal} />
     </div>
   );
 }
