@@ -21,7 +21,7 @@ import {
 import { IMAGE_BASE_URL } from '@/app/api/api';
 import { useRouter } from 'next/navigation';
 import { BlockUser, UnblockUser } from '@/app/api/ApiHelper/userHelper';
-import Swal from 'sweetalert2';
+import CustomConfirmModal, { ConfirmModalState } from '@/app/components/common/CustomConfirmModal';
 
 interface UserDetailProps {
   onBack?: () => void;
@@ -32,6 +32,11 @@ export default function UserDetail({ onBack }: UserDetailProps) {
   const [activeUserTab, setActiveUserTab] = useState<'overview' | 'bookings' | 'reviews'>('overview');
   const [activeVendorTab, setActiveVendorTab] = useState<'basic' | 'presence' | 'services' | 'time' | 'trust' | 'bank' | 'portfolio'>('basic');
   const [userData, setUserData] = useState<any>(null);
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: "",
+    message: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -43,24 +48,31 @@ export default function UserDetail({ onBack }: UserDetailProps) {
 
   const handleToggleBlock = async () => {
     if (!userData) return;
-    try {
-      const res = userData.isComplated ? await BlockUser(userData.id) : await UnblockUser(userData.id);
-      if (res.data?.success || res.status === 200) {
-        const updated = { ...userData, isComplated: !userData.isComplated };
-        setUserData(updated);
-        sessionStorage.setItem('selectedUser', JSON.stringify(updated));
-        Swal.fire({
-          icon: 'success',
-          title: updated.isComplated ? 'User Unblocked' : 'User Blocked',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 2000,
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    const isCurrentlyBlocked = !userData.isComplated;
+    const actionText = isCurrentlyBlocked ? "Unblock" : "Block";
+
+    setConfirmModal({
+      isOpen: true,
+      title: `${actionText} User`,
+      message: `Are you sure you want to ${actionText.toLowerCase()} ${userData.fullName || 'this user'}?`,
+      confirmText: actionText,
+      cancelText: "Cancel",
+      confirmVariant: isCurrentlyBlocked ? "primary" : "danger",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const res = isCurrentlyBlocked ? await UnblockUser(userData.id) : await BlockUser(userData.id);
+          if (res.data?.success || res.status === 200) {
+            const updated = { ...userData, isComplated: !userData.isComplated };
+            setUserData(updated);
+            sessionStorage.setItem('selectedUser', JSON.stringify(updated));
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      onCancel: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
+    });
   };
 
   const vendorData = {
@@ -145,11 +157,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
 
         <button
           onClick={handleToggleBlock}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-xs font-semibold shadow-xs ${
-            userData?.isComplated
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-xs font-semibold shadow-xs ${userData?.isComplated
               ? 'bg-red-500 text-white hover:bg-red-600'
               : 'bg-green-600 text-white hover:bg-green-700'
-          }`}
+            }`}
         >
           <Ban className="w-3.5 h-3.5" />
           {userData?.isComplated ? 'Block User' : 'Unblock User'}
@@ -177,11 +188,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
             <div className="flex items-center gap-2.5 mb-1.5">
               <h2 className="text-base lg:text-lg font-bold text-gray-900 truncate">{userData.fullName}</h2>
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${
-                  userData?.isComplated
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold ${userData?.isComplated
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
-                }`}
+                  }`}
               >
                 {userData?.isComplated ? <CheckCircle className="w-3 h-3" /> : <Ban className="w-3 h-3" />}
                 {userData?.isComplated ? 'Active' : 'Inactive'}
@@ -232,21 +242,19 @@ export default function UserDetail({ onBack }: UserDetailProps) {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveMainTab('vendor')}
-              className={`py-2.5 px-3 border-b-2 font-bold text-xs transition-colors ${
-                activeMainTab === 'vendor'
+              className={`py-2.5 px-3 border-b-2 font-bold text-xs transition-colors ${activeMainTab === 'vendor'
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               Vendor Info
             </button>
             <button
               onClick={() => setActiveMainTab('user')}
-              className={`py-2.5 px-3 border-b-2 font-bold text-xs transition-colors ${
-                activeMainTab === 'user'
+              className={`py-2.5 px-3 border-b-2 font-bold text-xs transition-colors ${activeMainTab === 'user'
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               User Info
             </button>
@@ -269,11 +277,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveVendorTab(tab.id as any)}
-                  className={`py-1 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                    activeVendorTab === tab.id
+                  className={`py-1 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${activeVendorTab === tab.id
                       ? 'bg-black text-white shadow-2xs'
                       : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -294,11 +301,10 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveUserTab(tab.id as any)}
-                  className={`py-1 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                    activeUserTab === tab.id
+                  className={`py-1 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${activeUserTab === tab.id
                       ? 'bg-black text-white shadow-2xs'
                       : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -550,9 +556,8 @@ export default function UserDetail({ onBack }: UserDetailProps) {
                           <p className="font-bold text-xs text-gray-900">₹{booking.amount.toLocaleString()}</p>
                           <p className="text-[10px] text-gray-400">{booking.date}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                          booking.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${booking.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
                           {booking.status}
                         </span>
                       </div>
@@ -586,6 +591,8 @@ export default function UserDetail({ onBack }: UserDetailProps) {
           )}
         </div>
       </div>
+
+      <CustomConfirmModal {...confirmModal} />
     </div>
   );
 }
