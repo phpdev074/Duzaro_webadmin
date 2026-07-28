@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { LoginAdmin } from './api/ApiHelper/loginHelper';
@@ -11,7 +11,14 @@ export default function AdminLoginDesktop() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isValid, setIsValid] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      router.replace('/admin');
+    }
+  }, [router]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
